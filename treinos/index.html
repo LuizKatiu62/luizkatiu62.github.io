@@ -159,8 +159,30 @@ body{padding-top:45px}
 .tp-levels{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.6rem}
 .tp-levels .sf-btn{white-space:nowrap}
 .tp-types-note{font-size:.72rem;color:var(--text2);line-height:1.5;margin-top:.4rem}
-.tp-config{display:grid;grid-template-columns:1fr 1fr auto;gap:.45rem;margin-top:.6rem}
+.tp-config{display:grid;grid-template-columns:1fr auto;gap:.45rem;margin-top:.35rem}
 .tp-select{border:1px solid var(--border);border-radius:10px;background:#fff;padding:.42rem .55rem;font-size:.75rem;color:var(--text);font-family:inherit}
+/* ── OBJECTIVE GRID BUTTONS ── */
+.obj-wrap{display:grid;grid-template-columns:repeat(5,1fr);gap:.4rem;margin-top:.55rem;margin-bottom:.0rem}
+@media(max-width:460px){.obj-wrap{grid-template-columns:repeat(3,1fr)}}
+.obj-btn{
+  border:2px solid var(--border);background:var(--card);border-radius:12px;
+  padding:.5rem .2rem .4rem;font-family:inherit;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  transition:all .18s;
+}
+.obj-ico{font-size:1.25rem;line-height:1;display:block}
+.obj-lbl{font-size:.58rem;font-weight:800;line-height:1.2;text-align:center;display:block;color:var(--text)}
+.obj-sub{font-size:.5rem;font-weight:600;opacity:.5;line-height:1.2;text-align:center;display:block;color:var(--muted)}
+.obj-btn[data-obj="triathlon"].obj-on{background:#f0fdfa;border-color:#0f766e;box-shadow:0 2px 8px rgba(15,118,110,.18)}
+.obj-btn[data-obj="triathlon"].obj-on .obj-lbl{color:#0f766e}
+.obj-btn[data-obj="run10k"].obj-on{background:#f8fafc;border-color:#475569;box-shadow:0 2px 8px rgba(71,85,105,.18)}
+.obj-btn[data-obj="run10k"].obj-on .obj-lbl{color:#475569}
+.obj-btn[data-obj="half"].obj-on{background:#eff6ff;border-color:#1d4ed8;box-shadow:0 2px 8px rgba(29,78,216,.18)}
+.obj-btn[data-obj="half"].obj-on .obj-lbl{color:#1d4ed8}
+.obj-btn[data-obj="marathon"].obj-on{background:#f0fdf4;border-color:#15803d;box-shadow:0 2px 8px rgba(21,128,61,.18)}
+.obj-btn[data-obj="marathon"].obj-on .obj-lbl{color:#15803d}
+.obj-btn[data-obj="ultra"].obj-on{background:#fff7ed;border-color:#c2410c;box-shadow:0 2px 8px rgba(194,65,12,.18)}
+.obj-btn[data-obj="ultra"].obj-on .obj-lbl{color:#c2410c}
 .tp-apply{border:1px solid var(--blue);background:var(--blue);color:#fff;border-radius:10px;padding:.42rem .7rem;font-size:.72rem;font-weight:800;cursor:pointer;font-family:inherit}
 .tp-type-card{background:linear-gradient(135deg,#eff6ff,#f8fafc);border:1px solid #bfdbfe;border-radius:12px;padding:.85rem;margin-bottom:.65rem}
 .tp-type-title{font-size:.8rem;font-weight:800;color:#1e40af;text-transform:uppercase;letter-spacing:.4px;margin-bottom:.35rem}
@@ -504,14 +526,34 @@ body{padding-top:45px}
       <div class="card">
         <div class="card-title">📋 Planilha Semanal</div>
         <!-- Objetivo (define tipo de plano) -->
-        <div class="tp-config" style="margin-top:.55rem">
-          <select id="coach-objective" class="tp-select" onchange="setCoachObjective(this.value)">
-            <option value="triathlon">🏊🚴🏃 Triathlon</option>
-            <option value="run10k">🏃 10 km</option>
-            <option value="half">🏃 Meia Maratona</option>
-            <option value="marathon">🏃 Maratona</option>
-            <option value="ultra">⛰️ Ultra Maratona</option>
-          </select>
+        <div class="obj-wrap">
+          <button class="obj-btn" data-obj="triathlon" onclick="setCoachObjective('triathlon')">
+            <span class="obj-ico">🏊</span>
+            <span class="obj-lbl">Triathlon</span>
+            <span class="obj-sub">Swim·Bike·Run</span>
+          </button>
+          <button class="obj-btn" data-obj="run10k" onclick="setCoachObjective('run10k')">
+            <span class="obj-ico">⚡</span>
+            <span class="obj-lbl">10 km</span>
+            <span class="obj-sub">Velocidade</span>
+          </button>
+          <button class="obj-btn" data-obj="half" onclick="setCoachObjective('half')">
+            <span class="obj-ico">🏃</span>
+            <span class="obj-lbl">Meia</span>
+            <span class="obj-sub">21,1 km</span>
+          </button>
+          <button class="obj-btn" data-obj="marathon" onclick="setCoachObjective('marathon')">
+            <span class="obj-ico">🏅</span>
+            <span class="obj-lbl">Maratona</span>
+            <span class="obj-sub">42,2 km</span>
+          </button>
+          <button class="obj-btn" data-obj="ultra" onclick="setCoachObjective('ultra')">
+            <span class="obj-ico">⛰️</span>
+            <span class="obj-lbl">Ultra</span>
+            <span class="obj-sub">50 km+</span>
+          </button>
+        </div>
+        <div class="tp-config" style="margin-top:.35rem">
           <select id="coach-target" class="tp-select" onchange="setTriTarget(this.value)">
             <option value="sprint">Sprint</option>
             <option value="olimpico">Olímpico</option>
@@ -1759,9 +1801,11 @@ function setCoachObjective(objective){
 }
 
 function syncCoachObjectiveUi(){
-  const objSel = document.getElementById('coach-objective');
+  const cur = triCfg.objective || 'triathlon';
+  document.querySelectorAll('.obj-btn').forEach(b=>{
+    b.classList.toggle('obj-on', b.dataset.obj === cur);
+  });
   const triSel = document.getElementById('coach-target');
-  if(objSel) objSel.value = triCfg.objective || 'triathlon';
   if(triSel){
     const isTri = (triCfg.objective || 'triathlon') === 'triathlon';
     triSel.style.display = isTri ? '' : 'none';
@@ -3458,8 +3502,6 @@ function renderCoach(ativ,meta,bb,sono,stress,hrv,sem){
   const metrics = wk.data.metrics || built.metrics;
 
   const targetSel = document.getElementById('coach-target');
-  const objSel = document.getElementById('coach-objective');
-  if(objSel) objSel.value = objective;
   if(targetSel) targetSel.value = cycle.target || triCfg.target;
   syncCoachObjectiveUi();
 
