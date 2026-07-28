@@ -1287,8 +1287,59 @@ function prioridadeTreino(treino=''){
   return 3;
 }
 
+/* Se a prova cai nesta semana: marca o dia da prova, faz taper antes e recuperação depois */
+const OBJ_PROVA_LABEL = {half:'Meia Maratona', marathon:'Maratona', ultra:'Ultra Maratona', run10k:'10 km', triathlon:'Triathlon'};
+function aplicarDiaDeProva(plan=[], weekKey=''){
+  const ev = triCfg?.eventDate;
+  if(!ev || !weekKey || !Array.isArray(plan) || !plan.length) return plan;
+  const nome = OBJ_PROVA_LABEL[triCfg.objective] || 'Prova';
+  let achou = false;
+  const out = plan.map(item => {
+    let dataDia;
+    try{ dataDia = isoDateFromWeekDay(weekKey, item.day); }catch(_){ return item; }
+    if(dataDia === ev){
+      achou = true;
+      return {...item, _prova:true, treino:`🏁 PROVA — ${nome}`,
+        note:`Dia da prova. Café 3h antes. Aquecimento: 10 min solto + 3 acelerações curtas. Largue no ritmo planejado — os primeiros 3 km sempre parecem fáceis demais. Hidrate a cada 5 km.`};
+    }
+    return {...item, _diaProva:dataDia};
+  });
+  if(!achou) return plan;
+
+  // Ajusta os dias em torno da prova (respeitando os dias sem disponibilidade)
+  const disp = (typeof diasDisponiveis === 'function') ? diasDisponiveis() : [];
+  return out.map(item => {
+    if(item._prova) return item;                       // a prova acontece mesmo em dia "de folga"
+    const d = item._diaProva;
+    if(!d) return item;
+    if(disp.length && !disp.includes(item.day)) return item;  // dia de descanso continua descanso
+    const difDias = Math.round((new Date(d+'T12:00:00') - new Date(ev+'T12:00:00')) / 864e5);
+    if(difDias === -1){
+      return {...item, treino:'🌤️ Pré-prova — ativação leve',
+        note:`Véspera da prova. 15–20 min bem solto + 3×20s no ritmo de prova. Nada além disso. Prepare o kit hoje e priorize o sono.`};
+    }
+    if(difDias === -2 || difDias === -3){
+      return {...item, treino:'🪶 Taper — rodagem curta',
+        note:`Semana de prova: volume bem reduzido para chegar descansado. 25–30 min Z1/Z2 sem forçar. Pernas leves valem mais que qualquer treino agora.`};
+    }
+    if(difDias < -3){
+      return {...item, treino:'🪶 Taper — sessão leve',
+        note:`Semana de prova: apenas manutenção. Mantenha o corpo ativo sem gerar fadiga.`};
+    }
+    if(difDias === 1){
+      return {...item, treino:'💆 Recuperação pós-prova',
+        note:`Dia seguinte à prova: descanso ou caminhada de 20–30 min. Nada de corrida.`};
+    }
+    if(difDias > 1){
+      return {...item, treino:'💆 Recuperação',
+        note:`Pós-prova: regenerativo Z1 bem leve, ou descanso se ainda houver dor muscular.`};
+    }
+    return item;
+  }).map(x => { const y = {...x}; delete y._diaProva; return y; });
+}
+
 /* Distribui o plano nos dias realmente disponíveis e ajusta as janelas de horário */
-function applyTimeWindowAndRisk(plan=[], weekendIntense=true){
+function applyTimeWindowAndRisk(plan=[], weekendIntense=true, weekKey=''){
   const list = Array.isArray(plan) ? plan.map(x => ({...x})) : [];
   if(!list.length) return list;
 
@@ -1381,7 +1432,7 @@ function applyTimeWindowAndRisk(plan=[], weekendIntense=true){
   });
 
   // 3) prefixos de janela reais + aviso quando a sessão não cabe
-  return list.map(item => {
+  const comJanela = list.map(item => {
     const dia = item.day;
     const cfg = athlete.dias[dia] || {};
     const disp = disponiveis.includes(dia);
@@ -1403,6 +1454,9 @@ function applyTimeWindowAndRisk(plan=[], weekendIntense=true){
       : '';
     return {...item, note: `${janela}${movido}${risco} ${noteRaw}${aviso}`.trim()};
   });
+
+  // A prova tem data fixa: aplicada por último, sobrepondo qualquer realocação
+  return aplicarDiaDeProva(comJanela, weekKey);
 }
 
 function dayToOffset(day=''){
@@ -2184,9 +2238,19 @@ function savePerfil(){
 
 function computeCycleWeeks(){
   if(!triCfg.eventDate) return 12;
-  const eventMs = new Date(triCfg.eventDate + 'T12:00:00') - new Date();
-  const weeks = Math.round(eventMs / (7 * 24 * 3600 * 1000));
-  return Math.max(4, Math.min(52, weeks));
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const ev = new Date(triCfg.eventDate + 'T12:00:00'); ev.setHours(0,0,0,0);
+  const dias = Math.round((ev - hoje) / 864e5);
+  if(dias <= 0) return 0;                       // prova hoje ou já passada
+  return Math.min(52, Math.max(1, Math.ceil(dias / 7)));
+}
+
+/* Quantos dias faltam para a prova (negativo = já passou) */
+function diasAteProva(){
+  if(!triCfg.eventDate) return null;
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const ev = new Date(triCfg.eventDate + 'T12:00:00'); ev.setHours(0,0,0,0);
+  return Math.round((ev - hoje) / 864e5);
 }
 
 function saveTriCfg(){
@@ -2326,7 +2390,7 @@ function ensureWeeklyPlano(nivel){
       const kickoffAdjusted = applySwimFirstKickoff(normalized, nowWeek);
       const g = calcGarminSignals();
       const weekendIntense = !(g.guard <= 0.9 || g.bbAvg3 < 45 || g.sonoAvg7 < 6.2 || g.hrvAvg < 38 || g.volTrend > 0.18);
-      const scheduleAdjusted = applyTimeWindowAndRisk(kickoffAdjusted, weekendIntense);
+      const scheduleAdjusted = applyTimeWindowAndRisk(kickoffAdjusted, weekendIntense, nowWeek);
       if(JSON.stringify(saved.plan||[]) !== JSON.stringify(scheduleAdjusted)){
         saved.plan = scheduleAdjusted;
         saveTpState();
@@ -2345,7 +2409,7 @@ function ensureWeeklyPlano(nivel){
   const avg = calcTriAverages();
   const cycleTarget = TRI_TARGETS[tpState.cycle.target] ? tpState.cycle.target : triCfg.target;
   const cycleObjective = ['triathlon','run10k','half','marathon','ultra'].includes(tpState.cycle.objective) ? tpState.cycle.objective : (triCfg.objective || 'triathlon');
-  const cycleWeeks = Math.max(4, Math.min(52, Number(tpState.cycle.cycleWeeks)||12));
+  const cycleWeeks = Math.max(1, Math.min(52, Number(tpState.cycle.cycleWeeks)||12));
   const weekIndex = diffWeeks(tpState.cycle.startKey, nowWeek) + 1;
   const built = buildPeriodizedTriWeek(info, avg, weekIndex, cycleWeeks, cycleTarget, cycleObjective, nowWeek);
 
@@ -2355,7 +2419,8 @@ function ensureWeeklyPlano(nivel){
     done: {},
     plan: applyTimeWindowAndRisk(
       applySwimFirstKickoff(normalizePlanLabels(built.plan), nowWeek),
-      !(built?.metrics?.overtrainingRisk)
+      !(built?.metrics?.overtrainingRisk),
+      nowWeek
     ),
     metrics: built.metrics
   };
@@ -2707,7 +2772,7 @@ function buildPeriodizedTriWeek(profile, avg, weekIndex, totalWeeks, targetKey, 
   }
 
   plan = applySwimFirstKickoff(plan, weekKey);
-  plan = applyTimeWindowAndRisk(plan, weekendIntense);
+  plan = applyTimeWindowAndRisk(plan, weekendIntense, weekKey);
 
   return {
     plan,
