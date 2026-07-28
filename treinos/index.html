@@ -228,6 +228,59 @@ body{padding-top:45px}
 .tp-photo-modal-close{border:1px solid #bfdbfe;background:#fff;color:#1e3a8a;border-radius:999px;padding:.35rem .7rem;font-size:.82rem;font-weight:900;cursor:pointer;font-family:inherit}
 .tp-photo-modal-img{display:block;width:100%;height:auto;max-height:78vh;object-fit:contain;background:#eff6ff}
 
+/* ── PERFIL & DISPONIBILIDADE ── */
+.prf-sec{margin-bottom:.9rem}
+.prf-sec:last-child{margin-bottom:0}
+.prf-sec-t{font-size:.63rem;font-weight:900;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:.5rem;display:flex;align-items:center;gap:.35rem}
+.prf-hint{font-size:.66rem;color:var(--muted);line-height:1.5;margin:-.25rem 0 .5rem}
+/* grade de dias */
+.prf-days{display:grid;grid-template-columns:repeat(7,1fr);gap:.28rem}
+.prf-day{border:2px solid var(--border);background:var(--card);border-radius:10px;padding:.4rem .1rem .3rem;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:1px;transition:all .15s}
+.prf-day-n{font-size:.6rem;font-weight:900;color:var(--muted);line-height:1}
+.prf-day-m{font-size:.52rem;font-weight:700;color:var(--muted);opacity:.6;line-height:1}
+.prf-day.on{background:#eff6ff;border-color:var(--blue)}
+.prf-day.on .prf-day-n{color:var(--blue)}
+.prf-day.on .prf-day-m{color:var(--blue);opacity:.85}
+/* linha de detalhe do dia */
+.prf-drow{display:grid;grid-template-columns:2.4rem 1fr 4.3rem;gap:.4rem;align-items:center;margin-bottom:.3rem}
+.prf-drow-d{font-size:.68rem;font-weight:900;color:var(--text)}
+.prf-seg{display:flex;gap:.22rem}
+.prf-seg button{flex:1;border:1.5px solid var(--border);background:var(--card);color:var(--muted);border-radius:7px;padding:.24rem .1rem;font-size:.6rem;font-weight:800;cursor:pointer;font-family:inherit;transition:all .15s}
+.prf-seg button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.prf-min{width:100%;border:1.5px solid var(--border);border-radius:7px;padding:.26rem .3rem;font-size:.7rem;font-weight:700;font-family:inherit;text-align:center;background:var(--card);color:var(--text)}
+/* campos de anamnese */
+.prf-grid{display:grid;grid-template-columns:1fr 1fr;gap:.45rem}
+.prf-f label{display:block;font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:.2rem}
+.prf-f input{width:100%;border:1.5px solid var(--border);border-radius:8px;padding:.36rem .45rem;font-size:.76rem;font-family:inherit;background:var(--card);color:var(--text);outline:none}
+.prf-f input:focus{border-color:var(--blue)}
+.prf-chips{display:flex;flex-wrap:wrap;gap:.28rem}
+.prf-chip{border:1.5px solid var(--border);background:var(--card);color:var(--muted);border-radius:20px;padding:.24rem .6rem;font-size:.66rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+.prf-chip.on{background:#fef2f2;border-color:#dc2626;color:#b91c1c}
+.prf-save{width:100%;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:.5rem;font-size:.78rem;font-weight:800;cursor:pointer;font-family:inherit;margin-top:.6rem}
+.prf-sum{font-size:.68rem;color:var(--muted);line-height:1.6;margin-top:.5rem;padding-top:.5rem;border-top:1px dashed var(--border)}
+.prf-sum b{color:var(--text)}
+/* alerta de conflito entre plano e disponibilidade */
+.prf-warn{background:#fffbeb;border:1px solid #fcd34d;border-radius:9px;padding:.5rem .6rem;font-size:.68rem;color:#78350f;line-height:1.5;margin-top:.5rem}
+
+/* ── TREINO ESTRUTURADO ── */
+.wk-chips{display:flex;flex-wrap:wrap;gap:.25rem;margin:.3rem 0 .1rem}
+.wk-chip{font-size:.58rem;font-weight:800;padding:.13rem .42rem;border-radius:6px;background:rgba(100,116,139,.13);color:var(--text);white-space:nowrap}
+.wk-chip-dur{background:rgba(124,58,237,.15);color:#6d28d9}
+.wk-chip-z{background:rgba(29,78,216,.15);color:#1d4ed8}
+.wk-chip-pace{background:rgba(16,185,129,.16);color:#047857}
+.wk-chip-fc{background:rgba(239,68,68,.14);color:#b91c1c}
+@media(prefers-color-scheme:dark){
+  .wk-chip-dur{background:rgba(167,139,250,.2);color:#c4b5fd}
+  .wk-chip-z{background:rgba(96,165,250,.2);color:#93c5fd}
+  .wk-chip-pace{background:rgba(52,211,153,.2);color:#6ee7b7}
+  .wk-chip-fc{background:rgba(248,113,113,.2);color:#fca5a5}
+}
+.wk-steps{margin-top:.35rem;display:flex;flex-direction:column;gap:.22rem}
+.wk-step{display:flex;gap:.4rem;font-size:.68rem;line-height:1.45;color:var(--muted)}
+.wk-step-k{font-weight:900;flex-shrink:0;min-width:4.1rem;font-size:.58rem;text-transform:uppercase;letter-spacing:.03em;padding-top:.07rem}
+.wk-k-aq{color:#0ea5e9}.wk-k-pr{color:#dc2626}.wk-k-des{color:#10b981}
+.wk-step-v{flex:1;color:var(--text)}
+
 /* Coach day cards */
 .coach-day-block{border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:.55rem}
 .coach-day-hdr{display:flex;align-items:center;justify-content:space-between;padding:.48rem .75rem;background:#f8fafc;border-bottom:1px solid var(--border)}
@@ -523,6 +576,48 @@ body{padding-top:45px}
 
     <!-- ══ COACH ══ -->
     <div class="sec" id="sec-coach">
+      <div class="card">
+        <div class="card-title" style="cursor:pointer" onclick="togglePerfil()">
+          👤 Perfil &amp; Disponibilidade
+          <span id="prf-caret" style="margin-left:auto;font-size:.8rem">▸</span>
+        </div>
+        <div id="prf-body" style="display:none">
+          <div class="prf-sec">
+            <div class="prf-sec-t">📅 Dias que você treina</div>
+            <div class="prf-hint">Toque nos dias. Depois ajuste período e minutos de cada um.</div>
+            <div class="prf-days" id="prf-days"></div>
+          </div>
+          <div class="prf-sec">
+            <div class="prf-sec-t">⏱️ Período e tempo por dia</div>
+            <div id="prf-detail"></div>
+          </div>
+          <div class="prf-sec">
+            <div class="prf-sec-t">🩹 Lesões ou limitações atuais</div>
+            <div class="prf-hint">O relógio não sabe disso. Marque o que se aplica — o plano reduz impacto e intensidade.</div>
+            <div class="prf-chips" id="prf-lesoes"></div>
+          </div>
+          <div class="prf-sec">
+            <div class="prf-sec-t">📈 Anos de prática</div>
+            <div class="prf-grid" style="grid-template-columns:repeat(3,1fr)">
+              <div class="prf-f"><label>🏃 Corrida</label><input type="number" min="0" max="60" id="prf-anos-corrida" placeholder="0"></div>
+              <div class="prf-f"><label>🚴 Bike</label><input type="number" min="0" max="60" id="prf-anos-bike" placeholder="0"></div>
+              <div class="prf-f"><label>🏊 Natação</label><input type="number" min="0" max="60" id="prf-anos-natacao" placeholder="0"></div>
+            </div>
+          </div>
+          <div class="prf-sec">
+            <div class="prf-sec-t">🏅 Melhores tempos (se tiver)</div>
+            <div class="prf-hint">Formato h:mm:ss ou mm:ss. Usados para calibrar os paces do plano.</div>
+            <div class="prf-grid" style="grid-template-columns:repeat(4,1fr)">
+              <div class="prf-f"><label>5 km</label><input id="prf-pb-k5" placeholder="mm:ss"></div>
+              <div class="prf-f"><label>10 km</label><input id="prf-pb-k10" placeholder="mm:ss"></div>
+              <div class="prf-f"><label>21 km</label><input id="prf-pb-k21" placeholder="h:mm"></div>
+              <div class="prf-f"><label>42 km</label><input id="prf-pb-k42" placeholder="h:mm"></div>
+            </div>
+          </div>
+          <button class="prf-save" onclick="savePerfil()">Salvar e recalcular plano</button>
+          <div class="prf-sum" id="prf-sum"></div>
+        </div>
+      </div>
       <div class="card">
         <div class="card-title">📋 Planilha Semanal</div>
         <!-- Objetivo (define tipo de plano) -->
@@ -1157,31 +1252,156 @@ function applySwimFirstKickoff(plan=[], weekKey=''){
   return updated;
 }
 
+/* Estimativa de duração de uma sessão, em minutos, a partir do texto do treino */
+function estimarMinutos(treino=''){
+  const t = String(treino);
+  let min = 0;
+  const isBike = /bike|ciclismo|pedal|🚴|🚵/i.test(t);
+  const isSwim = /natação|natacao|nado|adaptação|adaptacao|técnica|tecnica|endurance|🏊/i.test(t);
+  const isGym  = /academia|força|forca|musculação|💪/i.test(t);
+  // metros de natação
+  const mMatch = t.match(/(\d[\d.]*)\s*m\b/i);
+  if(isSwim && mMatch){
+    const metros = Number(String(mMatch[1]).replace(/\./g,''));
+    if(metros > 50) min += (metros/1000) * 32;   // ~32 min por 1000 m incluindo pausas
+  }
+  // quilômetros (corrida e bike podem aparecer juntos num brick)
+  const kmAll = [...t.matchAll(/(\d+(?:[.,]\d+)?)\s*km/gi)].map(m => Number(String(m[1]).replace(',','.')));
+  kmAll.forEach(km => {
+    if(isBike && kmAll.length === 1) min += km * 2.2;      // ~27 km/h
+    else if(isBike && km >= 20) min += km * 2.2;           // trecho de bike do brick
+    else min += km * 7;                                     // corrida ~7 min/km médio
+  });
+  if(isGym) min += 60;
+  if(!min) min = 45;
+  return Math.round(min);
+}
+
+/* Prioridade da sessão: o que não pode ser perdido fica com número maior */
+function prioridadeTreino(treino=''){
+  const t = String(treino).toLowerCase();
+  if(/descanso/.test(t)) return 0;
+  if(/longo|longão|longao/.test(t)) return 5;
+  if(/brick|tempo|qualidade|intervalado|z3|z4/.test(t)) return 4;
+  if(/academia|força|forca/.test(t)) return 2;
+  return 3;
+}
+
+/* Distribui o plano nos dias realmente disponíveis e ajusta as janelas de horário */
 function applyTimeWindowAndRisk(plan=[], weekendIntense=true){
-  const list = Array.isArray(plan) ? plan : [];
+  const list = Array.isArray(plan) ? plan.map(x => ({...x})) : [];
+  if(!list.length) return list;
+
+  const disponiveis = diasDisponiveis();
+  const LIMPA = s => String(s||'')
+    .replace(/^🌅 Academia 5:30–6:30am\.\s*/,'')
+    .replace(/^🕠 Tarde: treino somente após 17:30\.\s*/,'')
+    .replace(/^🕠 Dias úteis: treino somente após 17:30\.\s*/,'')
+    .replace(/^🕘 Fim de semana: janela livre para treinos-chave\.\s*/,'')
+    .replace(/^🌅 [^.]*\.\s*/,'')
+    .replace(/^🕠 [^.]*\.\s*/,'')
+    .replace(/^🕘 [^.]*\.\s*/,'')
+    .replace(/^⏱️ [^.]*\.\s*/,'')
+    .replace(/^Índices Garmin liberam sessão mais intensa\.\s*/,'')
+    .replace(/^Índices Garmin em alerta: carga reduzida para evitar overtraining\.\s*/,'');
+
+  // Sem configuração de disponibilidade: mantém o plano como veio
+  if(!disponiveis.length){
+    return list.map(it => ({...it, note: LIMPA(it.note)}));
+  }
+
+  // 1) separa o que caiu em dia indisponível
+  const orfaos = [];
+  list.forEach(it => {
+    const dia = it.day;
+    if(!disponiveis.includes(dia) && prioridadeTreino(it.treino) > 0){
+      orfaos.push({...it});
+      it.treino = 'Descanso';
+      it.note = 'Dia sem disponibilidade no seu perfil.';
+      it._rest = true;
+    }
+  });
+
+  // 2) realoca os órfãos mais importantes para o dia disponível mais próximo
+  //    que hoje tem sessão de menor prioridade
+  orfaos.sort((a,b) => prioridadeTreino(b.treino) - prioridadeTreino(a.treino));
+  orfaos.forEach(orf => {
+    const origIdx = DIAS_SEM.indexOf(orf.day);
+    const prioOrf = prioridadeTreino(orf.treino);
+    const minOrf = estimarMinutos(orf.treino);
+    let alvo = null, melhorDist = 99, modo = '';
+
+    // 1ª opção: um dia onde as duas sessões CABEM juntas (não perde nada)
+    disponiveis.forEach(d => {
+      const item = list.find(x => x.day === d);
+      if(!item) return;
+      const jaTem = prioridadeTreino(item.treino) > 0;
+      const somaMin = (jaTem ? estimarMinutos(item.treino) : 0) + minOrf;
+      if(somaMin > minutosDoDia(d) * 1.1) return;
+      const dist = Math.abs(DIAS_SEM.indexOf(d) - origIdx);
+      if(dist < melhorDist){ melhorDist = dist; alvo = item; modo = jaTem ? 'somar' : 'ocupar'; }
+    });
+
+    // 2ª opção: substituir uma sessão menos importante, avisando o que saiu
+    if(!alvo){
+      melhorDist = 99;
+      disponiveis.forEach(d => {
+        const item = list.find(x => x.day === d);
+        if(!item) return;
+        if(prioridadeTreino(item.treino) >= prioOrf) return;
+        if(minOrf > minutosDoDia(d) * 1.25) return;
+        const dist = Math.abs(DIAS_SEM.indexOf(d) - origIdx);
+        if(dist < melhorDist){ melhorDist = dist; alvo = item; modo = 'substituir'; }
+      });
+    }
+
+    if(alvo){
+      if(modo === 'somar'){
+        const antes = alvo.treino;
+        alvo.treino = `${antes} + ${orf.treino}`;
+        alvo.note = `${LIMPA(alvo.note)} ${LIMPA(orf.note)}`.trim();
+      } else if(modo === 'substituir'){
+        const saiu = alvo.treino;
+        alvo.treino = orf.treino;
+        alvo.note = `${LIMPA(orf.note)} ⚠️ Substituiu "${String(saiu).replace(/"/g,'')}" — não havia tempo para as duas.`.trim();
+      } else {
+        alvo.treino = orf.treino;
+        alvo.note = LIMPA(orf.note);
+      }
+      alvo._movedFrom = orf.day;
+      delete alvo._rest;
+    } else {
+      // Não coube em lugar nenhum: avisa em vez de sumir em silêncio
+      const rest = list.find(x => x.day === orf.day);
+      if(rest){
+        const est = estimarMinutos(orf.treino);
+        rest.note = `Dia sem disponibilidade. ⚠️ "${String(orf.treino).replace(/"/g,'')}" (~${est} min) não coube em nenhum outro dia — libere um dia ou aumente uma janela para não perder esta sessão.`;
+      }
+    }
+  });
+
+  // 3) prefixos de janela reais + aviso quando a sessão não cabe
   return list.map(item => {
-    const day = String(item?.day||'').toLowerCase();
-    const isWeekend = day.startsWith('sáb') || day.startsWith('sab') || day.startsWith('dom');
-    const hasGym = /academia/i.test(String(item?.treino||''));
-    const gymPrefix = '🌅 Academia 5:30–6:30am.';
-    const weekdayPrefix = '🕠 Tarde: treino somente após 17:30.';
-    const weekendPrefix = '🕘 Fim de semana: janela livre para treinos-chave.';
-    const weekendLoad = weekendIntense
-      ? 'Índices Garmin liberam sessão mais intensa.'
-      : 'Índices Garmin em alerta: carga reduzida para evitar overtraining.';
-    const noteRaw = String(item?.note||'')
-      .replace(/^🌅 Academia 5:30–6:30am\.\s*/,'')
-      .replace(/^🕠 Tarde: treino somente após 17:30\.\s*/,'')
-      .replace(/^🕠 Dias úteis: treino somente após 17:30\.\s*/,'')
-      .replace(/^🕘 Fim de semana: janela livre para treinos-chave\.\s*/,'')
-      .replace(/^Índices Garmin liberam sessão mais intensa\.\s*/,'')
-      .replace(/^Índices Garmin em alerta: carga reduzida para evitar overtraining\.\s*/,'');
-    const note = isWeekend
-      ? `${weekendPrefix} ${weekendLoad} ${noteRaw}`.trim()
-      : hasGym
-        ? `${gymPrefix} ${noteRaw}`.trim()
-        : `${weekdayPrefix} ${noteRaw}`.trim();
-    return {...item, note};
+    const dia = item.day;
+    const cfg = athlete.dias[dia] || {};
+    const disp = disponiveis.includes(dia);
+    const noteRaw = LIMPA(item.note);
+
+    if(item._rest || /descanso/i.test(String(item.treino)) && !disp){
+      return {...item, note: noteRaw || 'Descanso.'};
+    }
+
+    const per = PERIODOS[cfg.periodo] || 'Manhã';
+    const ico = cfg.periodo === 'manha' ? '🌅' : cfg.periodo === 'noite' ? '🌙' : '🕠';
+    const janela = `${ico} ${per} · ${cfg.min} min disponíveis.`;
+    const est = estimarMinutos(item.treino);
+    const naoCabe = est > (cfg.min||0) * 1.1;
+    const aviso = naoCabe ? ` ⚠️ Sessão estimada em ~${est} min — acima da sua janela. Reduza o volume ou divida em dois dias.` : '';
+    const movido = item._movedFrom ? ` ↩ Realocado de ${item._movedFrom} (dia indisponível).` : '';
+    const risco = (dia==='Sáb'||dia==='Dom')
+      ? (weekendIntense ? '' : ' Índices Garmin em alerta: carga reduzida.')
+      : '';
+    return {...item, note: `${janela}${movido}${risco} ${noteRaw}${aviso}`.trim()};
   });
 }
 
@@ -1774,6 +1994,194 @@ function loadTriCfg(){
   }
 }
 
+// ══════════════ PERFIL DO ATLETA & DISPONIBILIDADE ══════════════
+const ATHLETE_KEY = 'treinos_athlete_v1';
+const DIAS_SEM = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+const LESOES_OPTS = ['Joelho','Lombar','Ombro','Tornozelo','Quadril','Panturrilha','Fascite','Aquiles'];
+const PERIODOS = {manha:'Manhã', tarde:'Tarde', noite:'Noite'};
+
+function defaultAthlete(){
+  // 6 dias/semana, sexta como descanso (véspera do treino-chave de sábado)
+  const base = {
+    Seg:{on:true, periodo:'manha', min:60},
+    Ter:{on:true, periodo:'tarde', min:60},
+    Qua:{on:true, periodo:'manha', min:60},
+    Qui:{on:true, periodo:'tarde', min:60},
+    Sex:{on:false,periodo:'manha', min:0},
+    'Sáb':{on:true, periodo:'manha', min:120},
+    Dom:{on:true, periodo:'manha', min:120}
+  };
+  return {dias:base, lesoes:[], anos:{corrida:0,bike:0,natacao:0}, pb:{k5:'',k10:'',k21:'',k42:''}};
+}
+
+function loadAthlete(){
+  try{
+    const raw = localStorage.getItem(ATHLETE_KEY);
+    if(!raw) return defaultAthlete();
+    const p = JSON.parse(raw);
+    const d = defaultAthlete();
+    return {
+      dias: {...d.dias, ...(p.dias||{})},
+      lesoes: Array.isArray(p.lesoes) ? p.lesoes : [],
+      anos: {...d.anos, ...(p.anos||{})},
+      pb: {...d.pb, ...(p.pb||{})}
+    };
+  }catch(_){ return defaultAthlete(); }
+}
+let athlete = loadAthlete();
+
+function saveAthlete(){
+  try{ localStorage.setItem(ATHLETE_KEY, JSON.stringify(athlete)); }catch(_){}
+}
+
+/* Dias disponíveis, em ordem da semana */
+function diasDisponiveis(){
+  return DIAS_SEM.filter(d => athlete.dias[d]?.on && (athlete.dias[d]?.min||0) > 0);
+}
+
+/* Minutos disponíveis num dia (0 = indisponível) */
+function minutosDoDia(dia){
+  const d = athlete.dias[dia];
+  return (d?.on && d.min > 0) ? Number(d.min) : 0;
+}
+
+/* Ajustes derivados do perfil: lesões limitam impacto, experiência libera carga */
+function athleteAdjust(){
+  const les = athlete.lesoes || [];
+  const impactoAlto = ['Joelho','Tornozelo','Panturrilha','Fascite','Aquiles','Quadril'];
+  const temImpacto = les.some(l => impactoAlto.includes(l));
+  const temLombar = les.includes('Lombar');
+  const anosCorrida = Number(athlete.anos?.corrida||0);
+  // fator de volume: lesão reduz, experiência dá margem
+  let vol = 1;
+  if(temImpacto) vol *= 0.82;
+  if(les.length >= 3) vol *= 0.9;
+  if(anosCorrida >= 10) vol *= 1.05;
+  else if(anosCorrida > 0 && anosCorrida < 2) vol *= 0.9;
+  // intensidade: lesão de impacto corta trabalho de alta intensidade
+  const intens = temImpacto ? 0.85 : 1;
+  const avisos = [];
+  if(temImpacto) avisos.push(`Impacto reduzido por ${les.filter(l=>impactoAlto.includes(l)).join(', ').toLowerCase()}`);
+  if(temLombar) avisos.push('Sem carga axial pesada na academia (lombar)');
+  return {vol: Math.max(0.6, Math.min(1.15, vol)), intens, temImpacto, temLombar, avisos};
+}
+
+/* Nível sugerido a partir de experiência + volume real do Garmin */
+function nivelSugerido(avgRunKm){
+  const a = Number(athlete.anos?.corrida||0);
+  const km = Number(avgRunKm||0);
+  if(a >= 8 && km >= 40) return 'tri_avancado';
+  if(a >= 3 || km >= 25) return 'tri_intermediario';
+  return 'tri_iniciante';
+}
+
+function togglePerfil(){
+  const b = document.getElementById('prf-body');
+  const c = document.getElementById('prf-caret');
+  if(!b) return;
+  const open = b.style.display !== 'none';
+  b.style.display = open ? 'none' : 'block';
+  if(c) c.textContent = open ? '▸' : '▾';
+  if(!open) renderPerfil();
+}
+
+function renderPerfil(){
+  // grade de dias
+  const dg = document.getElementById('prf-days');
+  if(dg) dg.innerHTML = DIAS_SEM.map(d => {
+    const on = athlete.dias[d]?.on && athlete.dias[d]?.min > 0;
+    return `<button class="prf-day ${on?'on':''}" onclick="toggleDia('${d}')">
+      <span class="prf-day-n">${d}</span>
+      <span class="prf-day-m">${on?athlete.dias[d].min+'m':'—'}</span>
+    </button>`;
+  }).join('');
+
+  // detalhe por dia (só os ativos)
+  const dt = document.getElementById('prf-detail');
+  const ativos = DIAS_SEM.filter(d => athlete.dias[d]?.on);
+  if(dt) dt.innerHTML = ativos.length ? ativos.map(d => {
+    const cfg = athlete.dias[d];
+    const segs = Object.keys(PERIODOS).map(p =>
+      `<button class="${cfg.periodo===p?'on':''}" onclick="setDiaPeriodo('${d}','${p}')">${PERIODOS[p]}</button>`
+    ).join('');
+    return `<div class="prf-drow">
+      <span class="prf-drow-d">${d}</span>
+      <div class="prf-seg">${segs}</div>
+      <input class="prf-min" type="number" min="0" max="360" step="15" value="${cfg.min}" onchange="setDiaMin('${d}',this.value)" title="minutos">
+    </div>`;
+  }).join('') : '<div class="prf-hint">Nenhum dia marcado.</div>';
+
+  // chips de lesão
+  const lz = document.getElementById('prf-lesoes');
+  if(lz) lz.innerHTML = LESOES_OPTS.map(l =>
+    `<button class="prf-chip ${athlete.lesoes.includes(l)?'on':''}" onclick="toggleLesao('${l}')">${l}</button>`
+  ).join('');
+
+  // inputs
+  const set = (id,v) => { const e = document.getElementById(id); if(e) e.value = v || ''; };
+  set('prf-anos-corrida', athlete.anos.corrida);
+  set('prf-anos-bike', athlete.anos.bike);
+  set('prf-anos-natacao', athlete.anos.natacao);
+  set('prf-pb-k5', athlete.pb.k5);
+  set('prf-pb-k10', athlete.pb.k10);
+  set('prf-pb-k21', athlete.pb.k21);
+  set('prf-pb-k42', athlete.pb.k42);
+
+  renderPerfilResumo();
+}
+
+function renderPerfilResumo(){
+  const el = document.getElementById('prf-sum');
+  if(!el) return;
+  const dd = diasDisponiveis();
+  const totMin = dd.reduce((s,d)=>s+minutosDoDia(d),0);
+  const adj = athleteAdjust();
+  const h = Math.floor(totMin/60), m = totMin%60;
+  let txt = `<b>${dd.length} dias/semana</b> · <b>${h}h${m?String(m).padStart(2,'0'):''}</b> disponíveis`;
+  if(dd.length) txt += ` · maior janela: <b>${Math.max(...dd.map(minutosDoDia))} min</b>`;
+  if(adj.avisos.length) txt += `<br>⚠️ ${adj.avisos.join(' · ')}`;
+  el.innerHTML = txt;
+}
+
+function toggleDia(d){
+  const cfg = athlete.dias[d] || {on:false,periodo:'manha',min:0};
+  const ligado = cfg.on && cfg.min > 0;
+  athlete.dias[d] = ligado
+    ? {...cfg, on:false, min:0}
+    : {...cfg, on:true, min: cfg.min > 0 ? cfg.min : (d==='Sáb'||d==='Dom' ? 120 : 60)};
+  saveAthlete(); renderPerfil();
+}
+function setDiaPeriodo(d,p){
+  if(!athlete.dias[d]) return;
+  athlete.dias[d].periodo = p;
+  saveAthlete(); renderPerfil();
+}
+function setDiaMin(d,v){
+  if(!athlete.dias[d]) return;
+  const n = Math.max(0, Math.min(360, Number(v)||0));
+  athlete.dias[d].min = n;
+  if(n === 0) athlete.dias[d].on = false;
+  saveAthlete(); renderPerfil();
+}
+function toggleLesao(l){
+  const i = athlete.lesoes.indexOf(l);
+  if(i >= 0) athlete.lesoes.splice(i,1); else athlete.lesoes.push(l);
+  saveAthlete(); renderPerfil();
+}
+
+function savePerfil(){
+  const num = id => { const e=document.getElementById(id); return e ? Math.max(0,Number(e.value)||0) : 0; };
+  const str = id => { const e=document.getElementById(id); return e ? String(e.value||'').trim() : ''; };
+  athlete.anos = {corrida:num('prf-anos-corrida'), bike:num('prf-anos-bike'), natacao:num('prf-anos-natacao')};
+  athlete.pb = {k5:str('prf-pb-k5'), k10:str('prf-pb-k10'), k21:str('prf-pb-k21'), k42:str('prf-pb-k42')};
+  saveAthlete();
+  renderPerfilResumo();
+  // recalcula o plano da semana com os novos parâmetros
+  try{ restartTriCycle(); }catch(_){}
+  const btn = document.querySelector('.prf-save');
+  if(btn){ const t = btn.textContent; btn.textContent = '✓ Plano recalculado'; setTimeout(()=>{btn.textContent = t;}, 1800); }
+}
+
 function computeCycleWeeks(){
   if(!triCfg.eventDate) return 12;
   const eventMs = new Date(triCfg.eventDate + 'T12:00:00') - new Date();
@@ -2177,10 +2585,16 @@ function buildPeriodizedTriWeek(profile, avg, weekIndex, totalWeeks, targetKey, 
   const overtrainingRisk = g.guard <= 0.9 || g.bbAvg3 < 45 || g.sonoAvg7 < 6.2 || g.hrvAvg < 38 || g.volTrend > 0.18;
   const weekendIntense = !overtrainingRisk;
 
+  // Perfil do atleta: lesões reduzem carga, experiência dá margem
+  const aAdj = (typeof athleteAdjust === 'function') ? athleteAdjust() : {vol:1, intens:1};
+  // Teto pelo tempo realmente disponível na semana
+  const minSemana = (typeof diasDisponiveis === 'function')
+    ? diasDisponiveis().reduce((s,d)=>s+minutosDoDia(d),0) : 0;
+
   const runCap = avg.runKm * 1.10;
-  const runRaw = (avg.runKm + (target.run-avg.runKm)*baseToPeak) * profile.runFactor * deloadFactor * g.guard * ageGuard;
-  const bikeRaw = (avg.bikeKm + (target.bike-avg.bikeKm)*baseToPeak) * profile.bikeFactor * deloadFactor * g.guard * ageGuard;
-  const swimRaw = (avg.swimKm + (target.swim-avg.swimKm)*baseToPeak) * profile.swimFactor * deloadFactor * g.guard * (swimBeginner ? 0.7 : ageGuard);
+  const runRaw = (avg.runKm + (target.run-avg.runKm)*baseToPeak) * profile.runFactor * deloadFactor * g.guard * ageGuard * aAdj.vol;
+  const bikeRaw = (avg.bikeKm + (target.bike-avg.bikeKm)*baseToPeak) * profile.bikeFactor * deloadFactor * g.guard * ageGuard * aAdj.vol;
+  const swimRaw = (avg.swimKm + (target.swim-avg.swimKm)*baseToPeak) * profile.swimFactor * deloadFactor * g.guard * (swimBeginner ? 0.7 : ageGuard) * aAdj.vol;
 
   const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));
   const runTarget = clamp(+Math.min(runRaw,runCap).toFixed(1), 12, 55);
@@ -3285,12 +3699,73 @@ function splitNoteForSports(note){
   return s;
 }
 
+/* Extrai os números-chave do treino para exibir como chips destacados */
+function chipsDoTreino(title, note){
+  const txt = `${title} ${note}`;
+  const chips = [];
+  const min = estimarMinutos(title);
+  if(min) chips.push({cls:'wk-chip-dur', txt:`⏱️ ~${min} min`});
+
+  const zonas = [...new Set((txt.match(/\bZ[1-5]\b/g) || []))].sort();
+  if(zonas.length) chips.push({cls:'wk-chip-z', txt:`🎯 ${zonas.join('/')}`});
+
+  const paces = [...new Set((txt.match(/\d:\d{2}\s*\/\s*km/g) || []).map(s=>s.replace(/\s/g,'')))];
+  if(paces.length) chips.push({cls:'wk-chip-pace', txt:`🏃 ${paces.slice(0,2).join(' · ')}`});
+
+  // faixa de FC: aceita "145-160 bpm" e também "FC 145-160"
+  const fc = txt.match(/(\d{2,3})\s*[-–]\s*(\d{2,3})\s*bpm/) || txt.match(/FC\s*(\d{2,3})\s*[-–]\s*(\d{2,3})/i);
+  if(fc) chips.push({cls:'wk-chip-fc', txt:`❤️ ${fc[1]}–${fc[2]} bpm`});
+  else {
+    const teto = txt.match(/Teto:\s*(\d{2,3})\s*bpm/i);
+    if(teto) chips.push({cls:'wk-chip-fc', txt:`❤️ teto ${teto[1]} bpm`});
+  }
+  return chips;
+}
+
+/* Remove os prefixos de metadado (janela, realocação, alertas) do começo da nota */
+function semPrefixoMeta(s=''){
+  return String(s)
+    .replace(/^[🌅🕠🌙][^.]*\.\s*/,'')
+    .replace(/^↩[^.]*\.\s*/,'')
+    .replace(/^Índices[^.]*\.\s*/,'')
+    .trim();
+}
+
+/* Divide a sessão em aquecimento / parte principal / desaquecimento quando descrita com → */
+function etapasDoTreino(note){
+  const s = semPrefixoMeta(note);
+  if(!s.includes('→')) return null;
+  const partes = s.split('→').map(x => x.trim()).filter(Boolean);
+  if(partes.length < 2) return null;
+  // o 1º trecho costuma vir rotulado ("Tarde: aquec 10' Z1") — remove só o rótulo inicial,
+  // sem tocar nos dois-pontos de paces como 5:30/km
+  partes[0] = partes[0].replace(/^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ .]{1,18}:\s*/, '').trim();
+  const limpa = x => x.replace(/^[·•\-\s]+/,'').replace(/\.$/,'').trim();
+  const out = [];
+  partes.forEach((p, i) => {
+    let k, kc;
+    if(i === 0){ k = 'Aquecim.'; kc = 'wk-k-aq'; }
+    else if(i === partes.length - 1){ k = 'Volta calma'; kc = 'wk-k-des'; }
+    else { k = 'Principal'; kc = 'wk-k-pr'; }
+    out.push({k, kc, v: limpa(p)});
+  });
+  return out;
+}
+
 function renderSportCard(emoji, css, title, note){
+  const chips = chipsDoTreino(title, note);
+  const etapas = etapasDoTreino(note);
+  const chipsHtml = chips.length
+    ? `<div class="wk-chips">${chips.map(c=>`<span class="wk-chip ${c.cls}">${c.txt}</span>`).join('')}</div>` : '';
+  const etapasHtml = etapas
+    ? `<div class="wk-steps">${etapas.map(e=>`<div class="wk-step"><span class="wk-step-k ${e.kc}">${e.k}</span><span class="wk-step-v">${e.v}</span></div>`).join('')}</div>`
+    : (note ? `<div class="coach-sport-note">${note}</div>` : '');
   return `<div class="coach-sport-card ${css}">
     <span class="coach-sport-ico">${emoji}</span>
     <div class="coach-sport-body">
       <div class="coach-sport-title">${title}</div>
-      ${note?`<div class="coach-sport-note">${note}</div>`:''}
+      ${chipsHtml}
+      ${etapasHtml}
     </div>
   </div>`;
 }
