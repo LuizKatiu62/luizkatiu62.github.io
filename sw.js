@@ -1,4 +1,4 @@
-const CACHE = 'gastos-v198';
+const CACHE = 'gastos-v199';
 
 const CORE_ASSETS = [
   './index.html',
@@ -72,7 +72,7 @@ self.addEventListener('fetch', e => {
   }
 
   // index.html — sempre da rede; fallback para cache se offline
-  if (url.endsWith('/') || url.includes('index.html')) {
+  if (e.request.mode=='navigate'|| url.endsWith('/') || url.includes('index.html')) {
     e.respondWith(
       fetch(e.request, { cache: 'no-store' })
         .then(res => {
