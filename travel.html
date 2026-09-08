@@ -356,7 +356,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter','Sego
     <div class="hero-badge">✈️ &nbsp; Trip Planner</div>
     <div class="hero-title">Plan Your Perfect Trip</div>
     <div class="hero-sub">Routes · Hotels · Dining · Events · Budget</div>
-    <div id="tv-ver" style="font-size:9px;color:rgba(255,255,255,.28);margin-top:10px;letter-spacing:.5px">v184</div>
+    <div id="tv-ver" style="font-size:9px;color:rgba(255,255,255,.28);margin-top:10px;letter-spacing:.5px">v198</div>
   </div>
 </div>
 
@@ -1277,9 +1277,6 @@ function buildRTHTML(d){
     h+='</div></div>';
   }
 
-  h+='<div style="background:#e0f2fe;border-radius:12px;padding:12px 16px;margin-bottom:16px;font-size:13px;color:var(--teal2)">'+
-    '💡 For parking and local venue details, check the <strong>🏙️ Local Trip</strong> tab</div>';
-
   h+='<button onclick="saveTripToHistory(this)" style="display:block;width:100%;margin:0 0 8px;padding:14px;background:linear-gradient(135deg,#064e3b,#059669);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 12px rgba(5,150,105,.3)">💾 &nbsp; Salvar Viagem no Histórico</button>';
   h+='<button onclick="newTrip()" style="display:block;width:100%;margin:0 0 8px;padding:13px;background:linear-gradient(135deg,var(--navy2),var(--navy3));color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 12px rgba(29,78,216,.25)">✈️ &nbsp; Nova Viagem</button>';
   h+='<button class="btn-reset" onclick="resetRT()">← Edit Route</button>';
@@ -1415,8 +1412,6 @@ function _applyFields(f){
     try{localStorage.setItem(_EXPR_KEY,JSON.stringify(f.expRange));}catch(e){}
   }
 }
-
-// Re-render Local Trip results synchronously from saved fields + destData
 
 function saveState(){
   try{
@@ -1985,7 +1980,7 @@ function forceUpdate(){
   });
 
   // Version check — show banner when newer version is available
-  var _myV='197';
+  var _myV='198';
   var _verEl=document.getElementById('tv-ver');
   if(_verEl) _verEl.textContent='v'+_myV;
   fetch('./version.json?_t='+Date.now(),{cache:'no-store'})
