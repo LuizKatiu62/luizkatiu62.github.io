@@ -124,6 +124,7 @@ svg .lbl{fill:var(--tx);font-weight:600}
   <div id="conteudo"><div class="vazio">Carregando…</div></div>
 </div>
 
+<script src="./semana-gastos.js?v=1"></script>
 <script>
 /* ───────── mesmos nomes, cores e regras do app ───────── */
 var FB_CONFIG = {
@@ -344,6 +345,9 @@ function render(){
     kpi('Ciclo atual até hoje', m0(atual.comum), 'dia '+atual.decorridos+' de '+atual.dias+' · projeção <b class="'+(lim>0&&atual.proj>lim?'bad':'')+'">'+m0(atual.proj)+'</b>')+
     kpi('Parcelados por ciclo', m0(parcMedia), (O.parcelados>0? pct(parcMedia/O.parcelados)+' do orçado ('+m0(O.parcelados)+')' : 'compromisso fixo, fora do limite'))+
   '</div>';
+
+  /* SEMANA PASSADA: onde vazou e o que fazer (semana-gastos.js) */
+  try{ if(window.SemanaGastos) html+='<div class="grid" style="margin-top:12px">'+SemanaGastos.secao(SemanaGastos.analisar(d, h))+'</div>' }catch(e){ console.warn('semana:', e) }
 
   /* ONDE ATACAR */
   var alvos=COMUNS.map(function(k){

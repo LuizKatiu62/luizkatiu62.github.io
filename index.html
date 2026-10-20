@@ -5354,6 +5354,16 @@ function forcarAtualizacao() {
 </script>
 
 <!-- Firebase carregado no fim do body para não bloquear o render -->
+<!-- Resumo da semana no topo da tela inicial (20/10/2026): onde vazou e o que fazer -->
+<script src="./semana-gastos.js?v=1"></script>
+<script>
+(function(){
+  if(!window.SemanaGastos || typeof renderizar !== 'function') return;
+  var orig = renderizar;
+  window.renderizar = function(){ var r = orig.apply(this, arguments); try{ SemanaGastos.pintarCartao(getDados()) }catch(e){} return r };
+  try{ SemanaGastos.pintarCartao(getDados()) }catch(e){}
+})();
+</script>
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
