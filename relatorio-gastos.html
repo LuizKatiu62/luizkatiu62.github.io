@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d4ed8">
+<title>Relatório de Gastos</title>
+<!--
+  RELATÓRIO COMPLETO DOS GASTOS DA CASA — 20/10/2026
+  Lê os MESMOS dados do app (Gastos da Casa): primeiro o que está salvo
+  neste aparelho, depois a versão da nuvem (Firebase), com o login do app.
+  Não grava nada: só lê.
+
+  Período: os 3 últimos ciclos do app (o "Período" das Configurações,
+  ex.: 15 → 14). O ciclo em curso entra com projeção até o fim.
+  Gasto comum = Carro + Diversos + Supermercado + Viagens (é o que o
+  "Limite" do app controla). Parcelados ficam à parte, como no app.
+-->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+:root{
+  --bg:#f6f7f9; --s1:#fff; --line:#e3e6ea; --grid:#eceef1;
+  --tx:#14171c; --tx2:#4b5361; --tx3:#7a8392;
+  --carro:#e34948; --diversos:#eb6834; --mercado:#1baf7a; --viagens:#2a78d6; --parcelados:#6250d6;
+  --bad:#c23a2b; --warn:#b26b00; --good:#1f7a3a; --acc:#1d4ed8;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:1040px;margin:0 auto;padding:18px 16px 40px}
+a{color:var(--acc)}
+.voltar{display:inline-block;margin-bottom:10px;font-size:13px;text-decoration:none;font-weight:600}
+header.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--tx);padding-bottom:10px;margin-bottom:12px}
+.kick{font:600 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--tx3)}
+h1{font-size:26px;margin:6px 0 0;letter-spacing:-.02em}
+.stamp{font:12px/1.5 var(--mono);color:var(--tx2);text-align:right}
+.barra{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.barra .fonte{font-size:12px;color:var(--tx3);flex:1;min-width:200px}
+.btn{font:inherit;font-weight:700;font-size:13px;padding:9px 14px;border-radius:9px;border:1px solid var(--tx);background:var(--tx);color:#fff;cursor:pointer;min-height:40px}
+.btn.sec{background:transparent;color:var(--tx)}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px;align-items:start}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0;grid-column:span 12}
+.c6{grid-column:span 6}
+@media(max-width:760px){.c6{grid-column:span 12}}
+.card h2{font-size:17px;margin:0;letter-spacing:-.01em}
+.ch{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.note{font-size:12px;color:var(--tx3)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:12px;background:var(--s1);overflow:hidden}
+.kpi{padding:12px 14px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);min-width:0}
+.kpi .l{font-size:12px;color:var(--tx2)}
+.kpi .v{font-size:23px;font-weight:800;letter-spacing:-.02em;margin:3px 0 2px;white-space:nowrap}
+.kpi .s{font:11px/1.35 var(--mono);color:var(--tx3)}
+@media(max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi .v{font-size:20px}}
+.bad{color:var(--bad)} .good{color:var(--good)} .warn{color:var(--warn)}
+.alvo{border-left:4px solid var(--bad)}
+.alvo ol{margin:6px 0 0;padding-left:20px}
+.alvo li{margin:7px 0}
+.alvo li b.v{white-space:nowrap}
+.ok-msg{border-left:4px solid var(--good)}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 7px;border-bottom:1px solid var(--grid);text-align:right;white-space:nowrap}
+th{font:600 10px/1.25 var(--mono);color:var(--tx3);text-transform:uppercase;letter-spacing:.04em;white-space:normal;vertical-align:bottom}
+td:first-child,th:first-child{text-align:left}
+td.t{text-align:left;white-space:normal}
+tr.tot td{font-weight:700;border-top:1.5px solid var(--tx)}
+.tw{overflow-x:auto}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.tag{font:600 10px/1 var(--mono);padding:2px 5px;border-radius:4px;border:1px solid var(--line);color:var(--tx3);margin-left:5px;vertical-align:1px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--tx2);margin:2px 0 6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{font-family:var(--mono);font-size:10.5px;fill:var(--tx3)}
+svg .lbl{fill:var(--tx);font-weight:600}
+.vazio{padding:30px 10px;text-align:center;color:var(--tx3)}
+.hit{cursor:default}
+#tip{position:fixed;z-index:50;pointer-events:none;background:#14171c;color:#fff;border-radius:8px;padding:8px 10px;font-size:12px;max-width:260px;box-shadow:0 6px 20px rgba(0,0,0,.2)}
+#tip .r{display:flex;justify-content:space-between;gap:12px}
+.bul{display:grid;grid-template-columns:minmax(0,30%) minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--grid)}
+.bul:last-child{border-bottom:0}
+.bul .n{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bul .trk{position:relative;height:16px;background:var(--grid);border-radius:4px}
+.bul .fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.bul .orc{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--tx)}
+.bul .vv{font:12px var(--mono);text-align:right;white-space:nowrap}
+.foot{font-size:11.5px;color:var(--tx3);margin-top:16px;line-height:1.5}
+@media print{
+  @page{size:A4;margin:11mm}
+  html,body{background:#fff}
+  .wrap{max-width:none;padding:0}
+  .voltar,.barra .btn,#tip{display:none!important}
+  .grid,.kpis{display:block!important}
+  .card{display:block;break-inside:avoid;page-break-inside:avoid;margin:0 0 10px;border-color:#ccc}
+  .card.c6{display:inline-block;vertical-align:top;width:49.3%}
+  .card.c6+.card.c6{margin-left:1.2%}
+  .card.longa{break-inside:auto;page-break-inside:auto}
+  .kpis{border:1px solid #ccc}
+  .kpi{display:inline-block;width:24.6%;vertical-align:top;border-bottom:0}
+  svg,tr,li,.bul{break-inside:avoid;page-break-inside:avoid}
+  .ch,h2{break-after:avoid;page-break-after:avoid}
+  .legend span{display:inline-block;margin-right:12px}
+  thead{display:table-header-group}
+  .tw{overflow:visible}
+  table{font-size:10.5px}
+  th,td{padding:4px 4px}
+  th{font-size:8.5px}
+}
+</style>
+</head>
+<body>
+<div id="tip" hidden></div>
+<div class="wrap">
+  <a class="voltar" href="./index.html">← Voltar ao app</a>
+  <header class="top">
+    <div><div class="kick">Gastos da Casa · Relatório</div><h1>Onde o orçamento está quebrando</h1></div>
+    <div class="stamp" id="stamp"></div>
+  </header>
+  <div class="barra">
+    <div class="fonte" id="fonte">Carregando os dados…</div>
+    <button class="btn sec" id="btAtual" type="button">Atualizar</button>
+    <button class="btn" id="btPdf" type="button">Salvar PDF</button>
+  </div>
+  <div id="conteudo"><div class="vazio">Carregando…</div></div>
+</div>
+
+<script>
+/* ───────── mesmos nomes, cores e regras do app ───────── */
+var FB_CONFIG = {
+  apiKey: "AIzaSyB0hO4m0XPRqmrYegHtkV4KawJA2py1glU",
+  authDomain: "gastos-casa-7f431.firebaseapp.com",
+  databaseURL: "https://gastos-casa-7f431-default-rtdb.firebaseio.com",
+  projectId: "gastos-casa-7f431"
+};
+var FB_SECRET = 'lk62-gastos-9f3a7b2e';
+var NOMES = { carro:'Carro', diversos:'Diversos', mercado:'Supermercado', viagens:'Viagens', parcelados:'Parcelados' };
+var COMUNS = ['mercado','carro','diversos','viagens'];
+var COR = { carro:'var(--carro)', diversos:'var(--diversos)', mercado:'var(--mercado)', viagens:'var(--viagens)', parcelados:'var(--parcelados)' };
+var SUBS  = { gas:'Gasolina', oleo:'Óleo', div:'Diversos', 'gas-rr':'Gasolina (Range Rover)', 'gas-pilot':'Gasolina (Pilot)', pneu:'Pneu', pecas:'Peças', outros:'Outros' };
+var DIASEM = ['dom','seg','ter','qua','qui','sex','sáb'];
+var MESC = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+var PEQUENO = 25;       // "gasto pequeno" (CA$) para o índice de vazamento
+
+function addMeses(dataStr, meses){
+  var p = dataStr.split('-'), ano = +p[0], mes = +p[1]-1, dia = +p[2];
+  var nm = mes + meses, na = ano + Math.floor(nm/12); nm = ((nm%12)+12)%12;
+  var ult = new Date(na, nm+1, 0).getDate(); dia = Math.min(dia, ult);
+  return na + '-' + String(nm+1).padStart(2,'0') + '-' + String(dia).padStart(2,'0');
+}
+function hojeIso(){ var n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0') }
+function dt(s){ return new Date(s+'T12:00:00') }
+function dias(a,b){ return Math.round((dt(b)-dt(a))/864e5)+1 }
+function fD(s){ var d=dt(s); return d.getDate()+' '+MESC[d.getMonth()] }
+function fDA(s){ var d=dt(s); return d.getDate()+' '+MESC[d.getMonth()]+' '+d.getFullYear() }
+function money(n,dec){ n=+n||0; var neg=n<0; n=Math.abs(n);
+  var s=n.toFixed(dec===0?0:2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); return (neg?'-':'')+'CA$ '+s }
+function m0(n){ return money(n,0) }
+function pct(x){ return isFinite(x)? Math.round(x*100)+'%' : '—' }
+function esc(t){ return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}) }
+function val(l){ return parseFloat(l.valor)||0 }
+function ehParcela(l){ return !!l.parcela || l.cat==='parcelados' }
+function subDe(l){
+  if(l.cat==='mercado') return l.loja || 'Mercado (sem loja)';
+  if(l.cat==='carro')   return l.sub ? (SUBS[l.sub]||l.sub) : 'Carro (sem tipo)';
+  return l.divsub || (l.desc ? String(l.desc).trim() : '') || NOMES[l.cat]+' (sem tipo)';
+}
+
+/* ───────── dados: aparelho primeiro, nuvem depois ───────── */
+var DADOS = null, FONTE = '';
+function limpar(d){
+  d = d || {}; var del = d.deleted_ids || [];
+  d.lancamentos = (d.lancamentos||[]).filter(function(l){ return l && l.data && del.indexOf(l.id)===-1 });
+  d.orcamentos = d.orcamentos || {}; d.limite = +d.limite || 0;
+  if(!d.periodo){ var n=new Date(), y=n.getFullYear(), m=String(n.getMonth()+1).padStart(2,'0');
+    d.periodo={inicio:y+'-'+m+'-01', fim:y+'-'+m+'-'+String(new Date(y,n.getMonth()+1,0).getDate()).padStart(2,'0')} }
+  return d;
+}
+function doAparelho(){ try{ var d=JSON.parse(localStorage.getItem('gastos')||'null'); return d && d.lancamentos ? d : null }catch(e){ return null } }
+function daNuvem(){
+  return new Promise(function(ok){
+    try{
+      try{ firebase.initializeApp(FB_CONFIG) }catch(e){}
+      var fim=setTimeout(function(){ ok(null) }, 12000);
+      firebase.auth().onAuthStateChanged(function(u){
+        if(!u){ clearTimeout(fim); ok('sem-login'); return }
+        firebase.database().ref('gastos/'+FB_SECRET).once('value').then(function(s){ clearTimeout(fim); ok(s.val()) })
+          .catch(function(){ clearTimeout(fim); ok(null) });
+      });
+    }catch(e){ ok(null) }
+  });
+}
+/* mesma mescla do app: a nuvem manda, e entram os lançamentos do aparelho que ainda não subiram */
+function mesclar(nuvem, local){
+  var d = Object.assign({}, nuvem); var ids = {};
+  d.lancamentos = (nuvem.lancamentos||[]).slice(); d.lancamentos.forEach(function(l){ if(l&&l.id) ids[l.id]=1 });
+  var del = (local && local.deleted_ids) || [];
+  if(del.length) d.deleted_ids = (d.deleted_ids||[]).concat(del);
+  if(local) (local.lancamentos||[]).forEach(function(l){ if(l && l.id && !ids[l.id]) d.lancamentos.push(l) });
+  if(local && local.periodo && (!d.periodo)) d.periodo = local.periodo;
+  return d;
+}
+async function carregar(){
+  var local = doAparelho();
+  if(local){ DADOS = limpar(JSON.parse(JSON.stringify(local))); FONTE='Dados salvos neste aparelho · buscando a versão da nuvem…'; render() }
+  var n = await daNuvem();
+  if(n && n!=='sem-login' && n.lancamentos){ DADOS = limpar(mesclar(n, local)); FONTE='Dados da nuvem (mesmos do app), lidos agora'; }
+  else if(n==='sem-login'){ FONTE = local ? 'Dados deste aparelho. Para pegar os da nuvem, entre no app (login) e volte aqui.' : 'Entre no app (login) e depois volte a esta página.'; }
+  else { FONTE = local ? 'Dados deste aparelho (a nuvem não respondeu agora).' : 'Não consegui ler os dados. Abra o app uma vez neste aparelho e volte aqui.'; }
+  render();
+}
+
+/* ───────── ciclos ───────── */
+function ciclos(d){
+  var p=d.periodo, h=hojeIso(), k=0;
+  /* se o app ainda não avançou o período, o ciclo atual é o que contém hoje */
+  while(h > addMeses(p.fim,k) && k<36) k++;
+  var out=[];
+  for(var j=k-3;j<=k;j++) out.push({inicio:addMeses(p.inicio,j), fim:addMeses(p.fim,j)});
+  out.forEach(function(c){
+    c.dias = dias(c.inicio,c.fim);
+    c.emCurso = h>=c.inicio && h<=c.fim;
+    c.decorridos = c.emCurso ? dias(c.inicio,h) : c.dias;
+    c.rot = fD(c.inicio)+' – '+fD(c.fim);
+  });
+  return out;
+}
+
+/* ───────── cálculo ───────── */
+function calcular(d){
+  var C = ciclos(d), L = d.lancamentos, h=hojeIso();
+  C.forEach(function(c){
+    c.l = L.filter(function(l){ return l.data>=c.inicio && l.data<=c.fim && l.data<=h });
+    c.cat = {}; COMUNS.forEach(function(k){ c.cat[k]=0 });
+    c.parc = 0; c.comum = 0; c.n = 0;
+    c.l.forEach(function(l){
+      if(ehParcela(l)){ c.parc += val(l); return }
+      if(c.cat[l.cat]===undefined) c.cat[l.cat]=0;
+      c.cat[l.cat] += val(l); c.comum += val(l); c.n++;
+    });
+    c.fator = c.emCurso ? c.dias / Math.max(1,c.decorridos) : 1;
+    c.proj = c.comum * c.fator;
+  });
+  return C;
+}
+
+/* ───────── gráficos ───────── */
+var TIPS=[];
+function niceMax(v){ if(v<=0) return 1; var p=Math.pow(10,Math.floor(Math.log10(v))), f=v/p; var st=[1,1.2,1.6,2,2.4,3,4,5,6,8,10].find(function(x){ return f<=x*1.0001 }); return st*p }
+var PRINT=false;
+function largura(def){ if(PRINT) return def>=700?740:360; var c=document.getElementById('conteudo'); var cw=(c&&c.clientWidth)||def; return Math.round(Math.min(def, Math.max(320, cw-34))) }
+
+/* barras empilhadas por ciclo + linha do limite */
+function barrasCiclo(C, lim, cats){
+  var W=largura(1000), H=270, ml=50, mr=10, mt=24, mb=34, iw=W-ml-mr, ih=H-mt-mb;
+  var tot=C.map(function(c){ return cats.reduce(function(s,k){ return s+(c.cat[k]||0) },0) });
+  var projs=C.map(function(c,i){ return c.emCurso? tot[i]*c.fator : tot[i] });
+  var mx=niceMax(Math.max.apply(null, projs.concat([lim*1.05, 1])));
+  var n=C.length, bw=iw/n, w=Math.min(150, bw*.5);
+  var g='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Gasto comum por ciclo">';
+  for(var i=0;i<=4;i++){ var y=mt+ih-ih*i/4; g+='<line x1="'+ml+'" x2="'+(W-mr)+'" y1="'+y+'" y2="'+y+'" stroke="var(--grid)"/><text x="'+(ml-6)+'" y="'+(y+3.5)+'" text-anchor="end">'+m0(mx*i/4).replace('CA$ ','')+'</text>' }
+  g+='<text x="'+(ml-6)+'" y="10" text-anchor="end">CA$</text>';
+  C.forEach(function(c,i){
+    var x=ml+i*bw+(bw-w)/2, y=mt+ih;
+    if(c.emCurso && projs[i]>tot[i]){ var hp=ih*projs[i]/mx;
+      g+='<rect x="'+x+'" y="'+(mt+ih-hp)+'" width="'+w+'" height="'+hp+'" fill="none" stroke="var(--tx3)" stroke-dasharray="4 3" rx="4"/>';
+      g+='<text x="'+(x+w/2)+'" y="'+(mt+ih-hp-6)+'" text-anchor="middle" style="font-weight:600;fill:var(--tx2)">proj. '+m0(projs[i]).replace('CA$ ','')+'</text>' }
+    cats.forEach(function(k){ var v=c.cat[k]||0; if(!v) return; var hh=ih*v/mx;
+      g+='<rect x="'+x+'" y="'+(y-hh)+'" width="'+w+'" height="'+Math.max(0,hh-1.5)+'" fill="'+COR[k]+'"/>';
+      if(hh>16) g+='<text x="'+(x+w/2)+'" y="'+(y-hh/2+3.5)+'" text-anchor="middle" style="fill:#fff;font-weight:600;font-size:10px">'+m0(v).replace('CA$ ','')+'</text>';
+      y-=hh });
+    if(!(c.emCurso && projs[i]>tot[i])) g+='<text class="lbl" x="'+(x+w/2)+'" y="'+(y-6)+'" text-anchor="middle">'+m0(tot[i])+'</text>';
+    else g+='<text class="lbl" x="'+(x+w/2)+'" y="'+(y-6)+'" text-anchor="middle">'+m0(tot[i])+'</text>';
+    g+='<text x="'+(x+w/2)+'" y="'+(H-mb+15)+'" text-anchor="middle">'+fD(c.inicio)+' –</text><text x="'+(x+w/2)+'" y="'+(H-mb+27)+'" text-anchor="middle">'+fD(c.fim)+(c.emCurso?' *':'')+'</text>';
+    g+='<rect class="hit" data-t="'+TIPS.length+'" x="'+(ml+i*bw)+'" y="'+mt+'" width="'+bw+'" height="'+ih+'" fill="transparent"/>';
+    TIPS.push('<b>'+esc(c.rot)+'</b>'+cats.map(function(k){ return '<div class="r"><span>'+NOMES[k]+'</span><b>'+money(c.cat[k]||0)+'</b></div>' }).join('')+'<div class="r"><span>Total</span><b>'+money(tot[i])+'</b></div>'+(c.emCurso?'<div class="r"><span>Projeção</span><b>'+money(projs[i])+'</b></div>':''));
+  });
+  if(lim>0){ var yl=mt+ih-ih*lim/mx; g+='<line x1="'+ml+'" x2="'+(W-mr)+'" y1="'+yl+'" y2="'+yl+'" stroke="var(--bad)" stroke-width="1.5" stroke-dasharray="6 4"/>' }
+  return g+'</svg>';
+}
+
+/* acumulado dia a dia do ciclo: atual × anteriores */
+function acumulado(C, lim){
+  var W=largura(1000), H=240, ml=58, mr=12, mt=16, mb=30, iw=W-ml-mr, ih=H-mt-mb;
+  var N=Math.max.apply(null, C.map(function(c){ return c.dias }));
+  var series=C.map(function(c,j){
+    var por={}; c.l.forEach(function(l){ if(!ehParcela(l)) por[l.data]=(por[l.data]||0)+val(l) });
+    var a=[], s=0; for(var i=0;i<c.decorridos;i++){ var k=addDias(c.inicio,i); s+=por[k]||0; a.push(s) } return a });
+  var mx=niceMax(Math.max.apply(null, [lim*1.05,1].concat(series.map(function(s){ return s.length?s[s.length-1]:0 }))));
+  var X=function(i){ return ml+iw*i/Math.max(1,N-1) }, Y=function(v){ return mt+ih-ih*v/mx };
+  var g='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Gasto acumulado no ciclo">';
+  for(var i=0;i<=4;i++){ var y=Y(mx*i/4); g+='<line x1="'+ml+'" x2="'+(W-mr)+'" y1="'+y+'" y2="'+y+'" stroke="var(--grid)"/><text x="'+(ml-6)+'" y="'+(y+3.5)+'" text-anchor="end">'+m0(mx*i/4).replace('CA$ ','')+'</text>' }
+  if(lim>0) g+='<line x1="'+X(0)+'" y1="'+Y(0)+'" x2="'+X(N-1)+'" y2="'+Y(lim)+'" stroke="var(--bad)" stroke-dasharray="6 4" stroke-width="1.3"/><text x="'+X(N-1)+'" y="'+(Y(lim)-6)+'" text-anchor="end" style="fill:var(--bad);font-weight:600">ritmo do limite</text>'.replace('x="'+X(N-1)+'" y="'+(Y(lim)-6)+'" text-anchor="end"','x="'+X(Math.round(N*.55))+'" y="'+(Y(lim*.55)+16)+'" text-anchor="start"');
+  var cores=['#c3c9d2','#9aa3b0','#5b6573','var(--acc)'];
+  series.forEach(function(s,j){ if(!s.length) return; var d='';
+    s.forEach(function(v,i){ d+=(i?'L':'M')+X(i).toFixed(1)+','+Y(v).toFixed(1) });
+    var cor=cores[j+(4-series.length)];
+    g+='<path d="'+d+'" fill="none" stroke="'+cor+'" stroke-width="'+(j===series.length-1?2.6:1.6)+'"/>';
+    var u=s.length-1; g+='<circle cx="'+X(u)+'" cy="'+Y(s[u])+'" r="3.5" fill="'+cor+'"/>';
+    if(j===series.length-1) g+='<text class="lbl" x="'+(X(u)+7)+'" y="'+(Y(s[u])-7)+'">'+m0(s[u])+' até hoje</text>' });
+  [1,8,15,22,29].forEach(function(dd){ if(dd<=N) g+='<text x="'+X(dd-1)+'" y="'+(H-mb+16)+'" text-anchor="middle">dia '+dd+'</text>' });
+  return g+'</svg><div class="legend">'+C.map(function(c,j){ return '<span><i style="background:'+cores[j+(4-C.length)]+'"></i>'+esc(c.rot)+(c.emCurso?' (atual)':' · fechou em '+m0(c.comum))+'</span>' }).join('')+'</div>';
+}
+function addDias(s,n){ var d=dt(s); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0') }
+
+/* barras verticais simples (dia da semana) */
+function colunas(rows, o){
+  var W=largura(o.w||470), H=o.h||200, ml=50, mr=8, mt=20, mb=26, iw=W-ml-mr, ih=H-mt-mb;
+  var mx=niceMax(Math.max.apply(null, rows.map(function(r){ return r.v }).concat([1])));
+  var n=rows.length, bw=iw/n, w=Math.min(46,bw*.62);
+  var g='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(o.aria)+'">';
+  for(var i=0;i<=4;i++){ var y=mt+ih-ih*i/4; g+='<line x1="'+ml+'" x2="'+(W-mr)+'" y1="'+y+'" y2="'+y+'" stroke="var(--grid)"/><text x="'+(ml-6)+'" y="'+(y+3.5)+'" text-anchor="end">'+m0(mx*i/4).replace('CA$ ','')+'</text>' }
+  rows.forEach(function(r,i){ var x=ml+i*bw+(bw-w)/2, hh=ih*r.v/mx;
+    g+='<rect x="'+x+'" y="'+(mt+ih-hh)+'" width="'+w+'" height="'+hh+'" rx="3" fill="'+(r.c||'var(--acc)')+'"/>';
+    if(r.v>0) g+='<text class="lbl" x="'+(x+w/2)+'" y="'+(mt+ih-hh-5)+'" text-anchor="middle">'+m0(r.v).replace('CA$ ','')+'</text>';
+    g+='<text x="'+(x+w/2)+'" y="'+(H-mb+15)+'" text-anchor="middle">'+esc(r.lab)+'</text>';
+    g+='<rect class="hit" data-t="'+TIPS.length+'" x="'+(ml+i*bw)+'" y="'+mt+'" width="'+bw+'" height="'+ih+'" fill="transparent"/>'; TIPS.push(r.tip) });
+  return g+'</svg>';
+}
+
+/* ───────── relatório ───────── */
+function render(){
+  TIPS=[]; var el=document.getElementById('conteudo');
+  document.getElementById('fonte').textContent=FONTE;
+  if(!DADOS || !DADOS.lancamentos.length){ el.innerHTML='<div class="vazio">'+esc(FONTE||'Sem lançamentos.')+'</div>'; return }
+  var d=DADOS, C=calcular(d), lim=d.limite, O=d.orcamentos||{};
+  var atual=C[C.length-1], fech=C.filter(function(c){ return !c.emCurso });
+  var h=hojeIso();
+  document.getElementById('stamp').innerHTML='Ciclos <b>'+fDA(C[0].inicio)+' – '+fDA(C[C.length-1].fim)+'</b><br>'+d.lancamentos.length+' lançamentos no app<br>Gerado em '+fDA(h);
+
+  /* médias: ciclos fechados + projeção do atual */
+  /* médias e "onde atacar": só os 3 ciclos FECHADOS. O atual tem poucos
+     dias e projetar a partir deles distorce; ele fica no "Ritmo". */
+  var F=fech, nC=F.length||1;
+  function mediaCat(k){ return F.reduce(function(s,c){ return s+(c.cat[k]||0) },0)/nC }
+  var mediaComum=F.reduce(function(s,c){ return s+c.comum },0)/nC;
+  var acima=F.filter(function(c){ return lim>0 && c.comum>lim }).length;
+  var parcMedia=F.reduce(function(s,c){ return s+c.parc },0)/nC;
+
+  var html='';
+  /* KPIs */
+  html+='<div class="kpis">'+
+    kpi('Gasto comum médio por ciclo', m0(mediaComum), lim>0? '<span class="'+(mediaComum>lim?'bad':'good')+'">'+pct(mediaComum/lim)+' do limite de '+m0(lim)+'</span>' : 'sem limite definido no app')+
+    kpi('Ciclos acima do limite', lim>0? acima+' de '+nC : '—', lim>0? 'nos '+nC+' últimos ciclos fechados':'defina o Limite nas Configurações')+
+    kpi('Ciclo atual até hoje', m0(atual.comum), 'dia '+atual.decorridos+' de '+atual.dias+' · projeção <b class="'+(lim>0&&atual.proj>lim?'bad':'')+'">'+m0(atual.proj)+'</b>')+
+    kpi('Parcelados por ciclo', m0(parcMedia), (O.parcelados>0? pct(parcMedia/O.parcelados)+' do orçado ('+m0(O.parcelados)+')' : 'compromisso fixo, fora do limite'))+
+  '</div>';
+
+  /* ONDE ATACAR */
+  var alvos=COMUNS.map(function(k){
+    var orc=+O[k]||0, med=mediaCat(k), estouros=F.filter(function(c){ return orc>0 && (c.cat[k]||0)>orc }).length;
+    return {k:k, orc:orc, med:med, exc:orc>0? med-orc : 0, estouros:estouros};
+  }).filter(function(a){ return a.med>0 });
+  var ruins=alvos.filter(function(a){ return a.orc>0 && a.exc>0 }).sort(function(a,b){ return b.exc-a.exc });
+  var semOrc=alvos.filter(function(a){ return !a.orc });
+  var subsTop=topSubs(F);
+  html+='<div class="grid" style="margin-top:12px">';
+  if(ruins.length){
+    html+='<section class="card alvo"><div class="ch"><h2>Onde atacar primeiro</h2><span class="note">média dos '+nC+' últimos ciclos fechados × orçamento da categoria</span></div><ol>'+
+      ruins.map(function(a){
+        var sub=subsTop.filter(function(s){ return s.cat===a.k }).slice(0,2);
+        return '<li><b>'+NOMES[a.k]+'</b>: gasta em média <b class="v">'+m0(a.med)+'</b> por ciclo, orçamento <b class="v">'+m0(a.orc)+'</b> → <b class="v bad">'+m0(a.exc)+' acima ('+pct(a.exc/a.orc)+')</b>. Estourou em '+a.estouros+' de '+nC+' ciclos.'+
+          (sub.length? ' O peso maior está em '+sub.map(function(s){ return '<b>'+esc(s.nome)+'</b> ('+m0(s.porCiclo)+'/ciclo)' }).join(' e ')+'.' : '')+'</li>' }).join('')+
+      '</ol>'+(lim>0 && mediaComum>lim? '<p class="note" style="margin:8px 0 0">Para voltar ao limite, o gasto comum precisa cair <b class="bad">'+m0(mediaComum-lim)+' por ciclo</b> (cerca de '+m0((mediaComum-lim)/ (atual.dias/7))+' por semana).</p>':'')+'</section>';
+  } else {
+    html+='<section class="card ok-msg"><div class="ch"><h2>Onde atacar primeiro</h2></div><p style="margin:0">'+(alvos.some(function(a){return a.orc>0})? 'Nenhuma categoria com orçamento está acima na média dos '+nC+' ciclos.' : 'Nenhuma categoria tem orçamento definido no app, então não há com o que comparar.')+
+      (lim>0 && mediaComum>lim? ' Mas o <b>total</b> está '+m0(mediaComum-lim)+' acima do limite por ciclo: o limite é menor que a soma dos orçamentos, ou há gasto em categoria sem orçamento.' : '')+'</p></section>';
+  }
+
+  /* gráfico por ciclo */
+  html+='<section class="card"><div class="ch"><h2>Gasto comum por ciclo</h2><span class="note">CA$ por categoria · * ciclo em curso, até hoje</span></div>'+
+    '<div class="legend">'+COMUNS.filter(function(k){ return C.some(function(c){ return c.cat[k] }) }).map(function(k){ return '<span><i style="background:'+COR[k]+'"></i>'+NOMES[k]+'</span>' }).join('')+(lim>0?'<span><i style="background:none;border-top:2px dashed var(--bad);border-radius:0;height:0;vertical-align:3px"></i>Limite '+m0(lim)+'</span>':'')+'<span><i style="background:none;border:1px dashed var(--tx3)"></i>Projeção do ciclo atual</span></div>'+
+    barrasCiclo(C, lim, COMUNS)+'</section>';
+
+  /* tabela categoria × ciclo */
+  html+='<section class="card"><div class="ch"><h2>Categorias: ciclo a ciclo × orçamento</h2><span class="note">o ciclo atual mostra o gasto até hoje e a projeção</span></div><div class="tw"><table><thead><tr><th>Categoria</th>'+
+    C.map(function(c){ return '<th>'+esc(c.rot)+(c.emCurso?' *':'')+'</th>' }).join('')+'<th>Projeção atual</th><th>Média ('+nC+' fechados)</th><th>Orçamento</th><th>Média × orç.</th></tr></thead><tbody>'+
+    COMUNS.concat(['parcelados']).map(function(k){
+      var orc=+O[k]||0, vals=C.map(function(c){ return k==='parcelados'? c.parc : (c.cat[k]||0) });
+      var proj=k==='parcelados'? atual.parc : (atual.cat[k]||0)*atual.fator;
+      var med=k==='parcelados'? parcMedia : mediaCat(k);
+      if(!vals.some(Boolean) && !orc) return '';
+      var r=orc? med/orc : NaN;
+      return '<tr><td><span class="sw" style="background:'+COR[k]+'"></span>'+NOMES[k]+(k==='parcelados'?'<span class="tag">fora do limite</span>':'')+'</td>'+
+        vals.map(function(v,i){ var cl=orc&&!C[i].emCurso&&v>orc?' class="bad"':''; return '<td'+cl+'>'+m0(v)+'</td>' }).join('')+
+        '<td'+(orc&&proj>orc?' class="bad"':'')+'>'+m0(proj)+'</td><td><b>'+m0(med)+'</b></td><td>'+(orc?m0(orc):'—')+'</td><td class="'+(r>1?'bad':r>.9?'warn':'good')+'">'+(orc?pct(r):'—')+'</td></tr>' }).join('')+
+    '<tr class="tot"><td>Gasto comum</td>'+C.map(function(c){ return '<td'+(lim&&!c.emCurso&&c.comum>lim?' class="bad"':'')+'>'+m0(c.comum)+'</td>' }).join('')+
+    '<td'+(lim&&atual.proj>lim?' class="bad"':'')+'>'+m0(atual.proj)+'</td><td>'+m0(mediaComum)+'</td><td>'+(lim?m0(lim):'—')+'</td><td class="'+(lim&&mediaComum>lim?'bad':'good')+'">'+(lim?pct(mediaComum/lim):'—')+'</td></tr>'+
+    '</tbody></table></div><p class="note" style="margin:6px 0 0">* ciclo em curso, até '+fD(h)+'. Vermelho = acima do orçamento.'+(semOrc.length? ' Sem orçamento no app: '+semOrc.map(function(a){return NOMES[a.k]}).join(', ')+'.':'')+'</p></section>';
+
+  /* ritmo do ciclo atual */
+  var restam=atual.dias-atual.decorridos, livre=lim-atual.comum, idealHoje=lim*atual.decorridos/atual.dias;
+  html+='<section class="card"><div class="ch"><h2>Ritmo do ciclo atual</h2><span class="note">'+esc(atual.rot)+' · dia '+atual.decorridos+' de '+atual.dias+'</span></div>'+
+    (lim>0? '<p style="margin:0 0 8px">Até hoje você gastou <b>'+m0(atual.comum)+'</b>; no ritmo do limite seriam <b>'+m0(idealHoje)+'</b> '+
+      (atual.comum>idealHoje? '→ <b class="bad">'+m0(atual.comum-idealHoje)+' adiantado</b>.' : '→ <b class="good">'+m0(idealHoje-atual.comum)+' de folga</b>.')+
+      (restam>0? ' Para fechar dentro do limite, sobram <b class="'+(livre<0?'bad':'')+'">'+m0(Math.max(0,livre))+'</b> para '+restam+' dias: <b>'+m0(Math.max(0,livre)/restam)+' por dia</b>'+
+      ' (até agora a média foi '+m0(atual.comum/Math.max(1,atual.decorridos))+' por dia).' : '')+'</p>' : '')+
+    acumulado(C, lim)+'</section>';
+
+  /* subcategorias */
+  html+='<section class="card longa"><div class="ch"><h2>Para onde o dinheiro vai</h2><span class="note">loja, tipo de gasto ou item · '+nC+' últimos ciclos fechados</span></div><div class="tw"><table><thead><tr><th>Onde</th><th>Categoria</th><th>Compras</th><th>Total</th><th>Por ciclo</th><th>Ticket médio</th><th>% do comum</th><th>Último × anterior</th></tr></thead><tbody>'+
+    subsTop.slice(0,15).map(function(s){ var vr=s.ant>0? (s.ult-s.ant)/s.ant : NaN;
+      return '<tr><td class="t"><b>'+esc(s.nome)+'</b></td><td><span class="sw" style="background:'+COR[s.cat]+'"></span>'+NOMES[s.cat]+'</td><td>'+s.n+'</td><td>'+m0(s.tot)+'</td><td>'+m0(s.porCiclo)+'</td><td>'+money(s.tot/s.n)+'</td><td>'+pct(s.share)+'</td><td class="'+(vr>.1?'bad':vr<-.1?'good':'')+'">'+(isFinite(vr)?(vr>0?'▲ ':'▼ ')+pct(Math.abs(vr)):'—')+'</td></tr>' }).join('')+
+    '</tbody></table></div><p class="note" style="margin:6px 0 0">"Último × anterior" compara os dois últimos ciclos fechados'+(fech.length<2?' (precisa de 2 ciclos fechados)':'')+'.</p></section>';
+
+  /* índices */
+  var comuns=[]; F.forEach(function(c){ c.l.forEach(function(l){ if(!ehParcela(l)) comuns.push(l) }) });
+  var totC=comuns.reduce(function(s,l){ return s+val(l) },0);
+  var peq=comuns.filter(function(l){ return val(l)<PEQUENO }), peqT=peq.reduce(function(s,l){ return s+val(l) },0);
+  var merc=comuns.filter(function(l){ return l.cat==='mercado' }), mercT=merc.reduce(function(s,l){ return s+val(l) },0);
+  var diasCom={}; comuns.forEach(function(l){ diasCom[l.data]=1 });
+  var diasTot=F.reduce(function(s,c){ return s+c.decorridos },0), nDias=Object.keys(diasCom).length;
+  var fds=comuns.filter(function(l){ var w=dt(l.data).getDay(); return w===0||w===6 }).reduce(function(s,l){ return s+val(l) },0);
+  html+='<section class="card"><div class="ch"><h2>Índices de comportamento</h2><span class="note">gasto comum dos '+nC+' últimos ciclos fechados</span></div><div class="tw"><table><thead><tr><th>Índice</th><th>Valor</th><th>O que quer dizer</th></tr></thead><tbody>'+
+    linhaI('Gastos pequenos (abaixo de CA$ '+PEQUENO+')', peq.length+' compras · '+m0(peqT)+' ('+pct(peqT/totC)+')', 'O "vazamento": cada um parece nada, somados viram '+m0(peqT/nC)+' por ciclo.')+
+    linhaI('Idas ao supermercado', (merc.length/nC).toFixed(1).replace('.',',')+' por ciclo · ticket '+money(merc.length? mercT/merc.length:0), 'Menos idas, com lista, costuma baixar o total: cada ida tem compra por impulso.')+
+    linhaI('Dias com gasto', nDias+' de '+diasTot+' dias ('+pct(nDias/diasTot)+')', 'Dias "sem gasto" são o jeito mais simples de cortar sem sentir.')+
+    linhaI('Gasto médio por dia', money(totC/Math.max(1,diasTot)), lim>0? 'O limite permite '+money(lim/atual.dias)+' por dia.' : '')+
+    linhaI('Fim de semana', m0(fds)+' ('+pct(fds/totC)+')', 'Sáb e dom são 29% dos dias; acima disso, o fim de semana pesa.')+
+    linhaI('Concentração', (function(){ var t3=subsTop.slice(0,3).reduce(function(s,x){return s+x.tot},0); return pct(t3/totC)+' em 3 lugares' })(), 'Os 3 maiores destinos: '+subsTop.slice(0,3).map(function(s){return esc(s.nome)}).join(', ')+'.')+
+    '</tbody></table></div></section>';
+
+  /* dia da semana + maiores lançamentos */
+  var porDS=[0,0,0,0,0,0,0], ocDS=[0,0,0,0,0,0,0];
+  F.forEach(function(c){ for(var i=0;i<c.decorridos;i++) ocDS[dt(addDias(c.inicio,i)).getDay()]++ });
+  comuns.forEach(function(l){ porDS[dt(l.data).getDay()]+=val(l) });
+  var ord=[1,2,3,4,5,6,0];
+  html+='<section class="card c6"><div class="ch"><h2>Gasto por dia da semana</h2><span class="note">média por dia, CA$</span></div>'+
+    colunas(ord.map(function(w){ var v=ocDS[w]? porDS[w]/ocDS[w] : 0; return {lab:DIASEM[w], v:v, c:(w===0||w===6)?'var(--diversos)':'var(--acc)', tip:'<b>'+DIASEM[w]+'</b><div class="r"><span>Média</span><b>'+money(v)+'</b></div><div class="r"><span>Total</span><b>'+money(porDS[w])+'</b></div>'} }), {aria:'Gasto médio por dia da semana', w:470, h:210})+'</section>';
+  var maiores=comuns.slice().sort(function(a,b){ return val(b)-val(a) }).slice(0,10);
+  html+='<section class="card c6"><div class="ch"><h2>10 maiores gastos</h2><span class="note">'+nC+' ciclos fechados, sem parcelados</span></div><div class="tw"><table><thead><tr><th>Data</th><th>Onde</th><th>Valor</th></tr></thead><tbody>'+
+    maiores.map(function(l){ return '<tr><td>'+fD(l.data)+'</td><td class="t"><span class="sw" style="background:'+COR[l.cat]+'"></span>'+esc(l.desc||subDe(l))+'</td><td>'+money(val(l))+'</td></tr>' }).join('')+
+    '</tbody></table></div></section>';
+
+  /* parcelados ativos */
+  var gr=grupos(d.lancamentos).filter(function(g){ return g.pagas<g.total });
+  if(gr.length){
+    var mens=gr.reduce(function(s,g){ return s+g.valor },0);
+    html+='<section class="card longa"><div class="ch"><h2>Parcelamentos ativos</h2><span class="note">'+m0(mens)+' por mês comprometidos'+(O.parcelados>0?' · orçado '+m0(O.parcelados):'')+'</span></div><div class="tw"><table><thead><tr><th>Compra</th><th>Parcela</th><th>Pagas</th><th>Falta pagar</th><th>Última parcela</th></tr></thead><tbody>'+
+      gr.sort(function(a,b){ return a.fim<b.fim?-1:1 }).map(function(g){ return '<tr><td class="t">'+esc(g.desc||'Parcelado')+'</td><td>'+money(g.valor)+'</td><td>'+g.pagas+' de '+g.total+'</td><td>'+m0(g.valor*(g.total-g.pagas))+'</td><td>'+(g.fim?fDA(g.fim):'—')+'</td></tr>' }).join('')+
+      '</tbody></table></div></section>';
+  }
+  html+='</div><p class="foot">Gasto comum = Supermercado + Carro + Diversos + Viagens, o que o Limite do app controla. Parcelados ficam à parte, como no app. Ciclos = o Período das Configurações do app ('+fD(d.periodo.inicio)+' → '+fD(d.periodo.fim)+'), repetido mês a mês. Projeção do ciclo atual = gasto até hoje ÷ dias decorridos × dias do ciclo. Médias, índices e "onde atacar" usam os '+nC+' últimos ciclos fechados; o ciclo em curso aparece no gráfico, na tabela e no Ritmo.</p>';
+  el.innerHTML=html;
+  ligarTips();
+}
+function kpi(l,v,s){ return '<div class="kpi"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="s">'+s+'</div></div>' }
+function linhaI(a,b,c){ return '<tr><td class="t"><b>'+a+'</b></td><td>'+b+'</td><td class="t note">'+c+'</td></tr>' }
+
+function topSubs(C){
+  var m={}, comumT=0, ult=C[C.length-1], ant=C[C.length-2];
+  C.forEach(function(c){ c.l.forEach(function(l){ if(ehParcela(l)) return;
+    var nome=subDe(l), k=l.cat+'|'+nome.toLowerCase(); comumT+=val(l);
+    if(!m[k]) m[k]={nome:nome, cat:l.cat, tot:0, n:0, ult:0, ant:0};
+    m[k].tot+=val(l); m[k].n++;
+    if(c===ult) m[k].ult+=val(l); if(c===ant) m[k].ant+=val(l); }) });
+  return Object.keys(m).map(function(k){ var s=m[k]; s.porCiclo=s.tot/C.length; s.share=comumT? s.tot/comumT : 0; return s }).sort(function(a,b){ return b.tot-a.tot });
+}
+function grupos(L){
+  var g={}, h=hojeIso();
+  L.forEach(function(l){ if(!l.parcela) return; var id=l.parcela.grupoId;
+    if(!g[id]) g[id]={desc:'', total:l.parcela.total, valor:val(l), pagas:0, fim:'', ult:0};
+    var x=g[id]; if((l.desc||'').trim() && l.desc!=='Identificar' && !x.desc) x.desc=l.desc.trim();
+    if(l.parcela.n>=x.ult){ x.ult=l.parcela.n; x.total=l.parcela.total||x.total; x.valor=val(l)||x.valor }
+    if(l.data<=h && l.parcela.n>x.pagas) x.pagas=l.parcela.n;
+    if(!x.fim || l.data>x.fim) x.fim=l.data });
+  return Object.keys(g).map(function(k){ return g[k] });
+}
+
+/* tooltip */
+var tip=document.getElementById('tip');
+function ligarTips(){
+  document.querySelectorAll('.hit[data-t]').forEach(function(e){
+    var h=TIPS[+e.getAttribute('data-t')]; if(!h) return;
+    e.addEventListener('mousemove',function(ev){ tip.innerHTML=h; tip.hidden=false; var w=tip.offsetWidth, hh=tip.offsetHeight;
+      var x=ev.clientX+14, y=ev.clientY+14; if(x+w>innerWidth-8) x=ev.clientX-w-14; if(y+hh>innerHeight-8) y=ev.clientY-hh-14; tip.style.left=x+'px'; tip.style.top=y+'px' });
+    e.addEventListener('mouseleave',function(){ tip.hidden=true });
+  });
+}
+
+/* PDF: desenha na largura do papel, qualquer que seja a tela */
+function paraPDF(sim){ if(PRINT===sim) return; PRINT=sim; if(DADOS) render() }
+document.getElementById('btPdf').onclick=function(){ tip.hidden=true; paraPDF(true); setTimeout(function(){ window.print(); setTimeout(function(){ paraPDF(false) },800) },120) };
+window.addEventListener('beforeprint',function(){ paraPDF(true) });
+window.addEventListener('afterprint',function(){ paraPDF(false) });
+document.getElementById('btAtual').onclick=function(){ carregar() };
+var rz; window.addEventListener('resize',function(){ clearTimeout(rz); rz=setTimeout(function(){ if(DADOS&&!PRINT) render() },200) });
+carregar();
+</script>
+</body>
+</html>
