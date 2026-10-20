@@ -14,7 +14,7 @@
   Período: os 3 últimos ciclos do app (o "Período" das Configurações,
   ex.: 15 → 14). O ciclo em curso entra com projeção até o fim.
   Gasto comum = Carro + Diversos + Supermercado + Viagens (é o que o
-  "Limite" do app controla). Parcelados ficam à parte, como no app.
+  "Limite" do app controla). Parcelados não entram neste relatório (20/10/2026).
 -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -384,7 +384,10 @@ function render(){
     kpi('Gasto comum médio por ciclo', m0(mediaComum), lim>0? '<span class="'+(mediaComum>lim?'bad':'good')+'">'+pct(mediaComum/lim)+' do limite de '+m0(lim)+'</span>' : 'sem limite definido no app')+
     kpi('Ciclos acima do limite', lim>0? acima+' de '+nC : '—', lim>0? RP+(F.some(function(c){return c.parcial})?' (cortados, proporcional)':''):'defina o Limite nas Configurações')+
     kpi('Ciclo atual até hoje', m0(atual.comum), 'dia '+atual.decorridos+' de '+atual.dias+' · projeção <b class="'+(lim>0&&atual.proj>lim?'bad':'')+'">'+m0(atual.proj)+'</b>')+
-    kpi('Parcelados por ciclo', m0(parcMedia), (O.parcelados>0? pct(parcMedia/O.parcelados)+' do orçado ('+m0(O.parcelados)+')' : 'compromisso fixo, fora do limite'))+
+    (function(){ var rest=atual.dias-atual.decorridos, livre=lim-atual.comum;
+      if(!(lim>0)) return kpi('Pode gastar por dia','—','defina o Limite nas Configurações');
+      if(rest<=0) return kpi('Pode gastar por dia','—','último dia do ciclo');
+      return kpi('Pode gastar por dia', '<span class="'+(livre<0?'bad':'')+'">'+m0(Math.max(0,livre)/rest)+'</span>', (livre<0? m0(-livre)+' acima do limite':m0(livre)+' livres')+' · '+rest+' dias até '+fD(atual.fim)) })()+
   '</div>';
 
   /* SEMANA PASSADA: onde vazou e o que fazer (semana-gastos.js) */
@@ -419,7 +422,7 @@ function render(){
   /* tabela categoria × ciclo */
   html+='<section class="card"><div class="ch"><h2>Categorias: ciclo a ciclo × orçamento</h2><span class="note">o ciclo atual mostra o gasto até hoje e a projeção</span></div><div class="tw"><table><thead><tr><th>Categoria</th>'+
     C.map(function(c){ return '<th>'+esc(c.rot)+(c.emCurso?' *':c.parcial?' (parcial)':'')+'</th>' }).join('')+(temAtual?'<th>Projeção atual</th>':'')+'<th>Média por ciclo</th><th>Orçamento</th><th>Média × orç.</th></tr></thead><tbody>'+
-    COMUNS.concat(['parcelados']).map(function(k){
+    COMUNS.map(function(k){
       var orc=+O[k]||0, vals=C.map(function(c){ return k==='parcelados'? c.parc : (c.cat[k]||0) });
       var proj=k==='parcelados'? atual.parc : (atual.cat[k]||0)*atual.fator;
       var med=k==='parcelados'? parcMedia : mediaCat(k);
@@ -476,15 +479,7 @@ function render(){
     maiores.map(function(l){ return '<tr><td>'+fD(l.data)+'</td><td class="t"><span class="sw" style="background:'+COR[l.cat]+'"></span>'+esc(l.desc||subDe(l))+'</td><td>'+money(val(l))+'</td></tr>' }).join('')+
     '</tbody></table></div></section>';
 
-  /* parcelados ativos */
-  var gr=grupos(d.lancamentos).filter(function(g){ return g.pagas<g.total });
-  if(gr.length){
-    var mens=gr.reduce(function(s,g){ return s+g.valor },0);
-    html+='<section class="card longa"><div class="ch"><h2>Parcelamentos ativos</h2><span class="note">'+m0(mens)+' por mês comprometidos'+(O.parcelados>0?' · orçado '+m0(O.parcelados):'')+'</span></div><div class="tw"><table><thead><tr><th>Compra</th><th>Parcela</th><th>Pagas</th><th>Falta pagar</th><th>Última parcela</th></tr></thead><tbody>'+
-      gr.sort(function(a,b){ return a.fim<b.fim?-1:1 }).map(function(g){ return '<tr><td class="t">'+esc(g.desc||'Parcelado')+'</td><td>'+money(g.valor)+'</td><td>'+g.pagas+' de '+g.total+'</td><td>'+m0(g.valor*(g.total-g.pagas))+'</td><td>'+(g.fim?fDA(g.fim):'—')+'</td></tr>' }).join('')+
-      '</tbody></table></div></section>';
-  }
-  html+='</div><p class="foot">Gasto comum = Supermercado + Carro + Diversos + Viagens, o que o Limite do app controla. Parcelados ficam à parte, como no app. Ciclos = o Período das Configurações do app ('+fD(d.periodo.inicio)+' → '+fD(d.periodo.fim)+'), repetido mês a mês. Projeção do ciclo atual = gasto até hoje ÷ dias decorridos × dias do ciclo. Médias, índices e "onde atacar" usam os ciclos fechados do período escolhido ('+RP+'), com ciclos cortados contando proporcionalmente; o Ritmo mostra sempre o ciclo de hoje.</p>';
+  html+='</div><p class="foot">Gasto comum = Supermercado + Carro + Diversos + Viagens, o que o Limite do app controla. Parcelados não entram neste relatório. Ciclos = o Período das Configurações do app ('+fD(d.periodo.inicio)+' → '+fD(d.periodo.fim)+'), repetido mês a mês. Projeção do ciclo atual = gasto até hoje ÷ dias decorridos × dias do ciclo. Médias, índices e "onde atacar" usam os ciclos fechados do período escolhido ('+RP+'), com ciclos cortados contando proporcionalmente; o Ritmo mostra sempre o ciclo de hoje.</p>';
   el.innerHTML=html;
   ligarTips();
 }
