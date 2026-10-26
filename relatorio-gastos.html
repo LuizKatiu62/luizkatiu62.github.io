@@ -372,7 +372,18 @@ function render(){
   /* médias: ciclos fechados + projeção do atual */
   /* médias e "onde atacar": só os 3 ciclos FECHADOS. O atual tem poucos
      dias e projetar a partir deles distorce; ele fica no "Ritmo". */
-  var F=fech, nC=F.length||1, nEq=F.reduce(function(s,c){ return s+c.peso },0)||1, RP=rotPeriodo(F.length);
+  /* Ciclo cortado com menos da metade dos dias NÃO entra na média: 2 dias
+     esticados para 30 viravam ×15 (1 tanque de gasolina = CA$ 1.802/ciclo).
+     Se não sobrar ciclo fechado, a base é o ritmo do ciclo atual (projeção). */
+  var MIN_PESO=0.5;
+  fech.forEach(function(c){ c.naMedia = c.peso>=MIN_PESO });
+  var curtos=fech.filter(function(c){ return !c.naMedia });
+  var F=fech.filter(function(c){ return c.naMedia }), usaAtual=!F.length;
+  if(usaAtual){ atual.peso=Math.max(1,atual.decorridos)/atual.dias; atual.naMedia=true; F=[atual] }
+  var nC=F.length||1, nEq=F.reduce(function(s,c){ return s+c.peso },0)||1;
+  var RP=usaAtual? 'no ritmo do ciclo atual ('+esc(atual.rot)+', dia '+atual.decorridos+' de '+atual.dias+')' : rotPeriodo(F.length);
+  var notaCurtos=curtos.length? 'Ciclos cortados com menos da metade dos dias ('+curtos.map(function(c){return esc(c.rot)}).join(', ')+') aparecem só como referência e não entram nas médias. ' : '';
+  var notaBase=usaAtual? 'Não há ciclo fechado no período escolhido: médias e "onde atacar" são a projeção do ciclo atual, com só '+atual.decorridos+' dias de dados. Para comparar com ciclos inteiros, escolha "3 ciclos". ' : '';
   function mediaCat(k){ return F.reduce(function(s,c){ return s+(c.cat[k]||0) },0)/nEq }
   var mediaComum=F.reduce(function(s,c){ return s+c.comum },0)/nEq;
   var acima=F.filter(function(c){ return lim>0 && c.comum/c.peso>lim }).length;
@@ -381,8 +392,9 @@ function render(){
   var html='';
   /* KPIs */
   html+='<div class="kpis">'+
-    kpi('Gasto comum médio por ciclo', m0(mediaComum), lim>0? '<span class="'+(mediaComum>lim?'bad':'good')+'">'+pct(mediaComum/lim)+' do limite de '+m0(lim)+'</span>' : 'sem limite definido no app')+
-    kpi('Ciclos acima do limite', lim>0? acima+' de '+nC : '—', lim>0? RP+(F.some(function(c){return c.parcial})?' (cortados, proporcional)':''):'defina o Limite nas Configurações')+
+    kpi(usaAtual?'Gasto comum projetado no ciclo':'Gasto comum médio por ciclo', m0(mediaComum), lim>0? '<span class="'+(mediaComum>lim?'bad':'good')+'">'+pct(mediaComum/lim)+' do limite de '+m0(lim)+'</span>' : 'sem limite definido no app')+
+    (usaAtual? kpi('Ciclos acima do limite','—','nenhum ciclo fechado no período; escolha "3 ciclos"') :
+    kpi('Ciclos acima do limite', lim>0? acima+' de '+nC : '—', lim>0? RP+(F.some(function(c){return c.parcial})?' (cortados, proporcional)':''):'defina o Limite nas Configurações'))+
     kpi('Ciclo atual até hoje', m0(atual.comum), 'dia '+atual.decorridos+' de '+atual.dias+' · projeção <b class="'+(lim>0&&atual.proj>lim?'bad':'')+'">'+m0(atual.proj)+'</b>')+
     (function(){ var rest=atual.dias-atual.decorridos, livre=lim-atual.comum;
       if(!(lim>0)) return kpi('Pode gastar por dia','—','defina o Limite nas Configurações');
@@ -403,10 +415,10 @@ function render(){
   var subsTop=topSubs(F, nEq);
   html+='<div class="grid" style="margin-top:12px">';
   if(ruins.length){
-    html+='<section class="card alvo"><div class="ch"><h2>Onde atacar primeiro</h2><span class="note">média por ciclo, '+RP+' × orçamento da categoria</span></div><ol>'+
+    html+='<section class="card alvo"><div class="ch"><h2>Onde atacar primeiro</h2><span class="note">'+(usaAtual?'projeção':'média por ciclo')+', '+RP+' × orçamento da categoria</span></div><ol>'+
       ruins.map(function(a){
         var sub=subsTop.filter(function(s){ return s.cat===a.k }).slice(0,2);
-        return '<li><b>'+NOMES[a.k]+'</b>: gasta em média <b class="v">'+m0(a.med)+'</b> por ciclo, orçamento <b class="v">'+m0(a.orc)+'</b> → <b class="v bad">'+m0(a.exc)+' acima ('+pct(a.exc/a.orc)+')</b>. Estourou em '+a.estouros+' de '+nC+' ciclos.'+
+        return '<li><b>'+NOMES[a.k]+'</b>: '+(usaAtual?'no ritmo atual vai gastar <b class="v">'+m0(a.med)+'</b> no ciclo':'gasta em média <b class="v">'+m0(a.med)+'</b> por ciclo')+', orçamento <b class="v">'+m0(a.orc)+'</b> → <b class="v bad">'+m0(a.exc)+' acima ('+pct(a.med/a.orc)+' do orçamento)</b>.'+(usaAtual?'':' Estourou em '+a.estouros+' de '+nC+' ciclos.')+
           (sub.length? ' O peso maior está em '+sub.map(function(s){ return '<b>'+esc(s.nome)+'</b> ('+m0(s.porCiclo)+'/ciclo)' }).join(' e ')+'.' : '')+'</li>' }).join('')+
       '</ol>'+(lim>0 && mediaComum>lim? '<p class="note" style="margin:8px 0 0">Para voltar ao limite, o gasto comum precisa cair <b class="bad">'+m0(mediaComum-lim)+' por ciclo</b> (cerca de '+m0((mediaComum-lim)/ (atual.dias/7))+' por semana).</p>':'')+'</section>';
   } else {
@@ -421,7 +433,7 @@ function render(){
 
   /* tabela categoria × ciclo */
   html+='<section class="card"><div class="ch"><h2>Categorias: ciclo a ciclo × orçamento</h2><span class="note">o ciclo atual mostra o gasto até hoje e a projeção</span></div><div class="tw"><table><thead><tr><th>Categoria</th>'+
-    C.map(function(c){ return '<th>'+esc(c.rot)+(c.emCurso?' *':c.parcial?' (parcial)':'')+'</th>' }).join('')+(temAtual?'<th>Projeção atual</th>':'')+'<th>Média por ciclo</th><th>Orçamento</th><th>Média × orç.</th></tr></thead><tbody>'+
+    C.map(function(c){ return '<th>'+esc(c.rot)+(c.emCurso?' *':c.parcial?' (parcial)':'')+'</th>' }).join('')+(temAtual?'<th>Projeção atual</th>':'')+'<th>'+(usaAtual?'Base (projeção)':'Média por ciclo')+'</th><th>Orçamento</th><th>'+(usaAtual?'Base':'Média')+' × orç.</th></tr></thead><tbody>'+
     COMUNS.map(function(k){
       var orc=+O[k]||0, vals=C.map(function(c){ return k==='parcelados'? c.parc : (c.cat[k]||0) });
       var proj=k==='parcelados'? atual.parc : (atual.cat[k]||0)*atual.fator;
@@ -429,11 +441,11 @@ function render(){
       if(!vals.some(Boolean) && !orc) return '';
       var r=orc? med/orc : NaN;
       return '<tr><td><span class="sw" style="background:'+COR[k]+'"></span>'+NOMES[k]+(k==='parcelados'?'<span class="tag">fora do limite</span>':'')+'</td>'+
-        vals.map(function(v,i){ var cl=orc&&!C[i].emCurso&&v/C[i].peso>orc?' class="bad"':''; return '<td'+cl+'>'+m0(v)+'</td>' }).join('')+
+        vals.map(function(v,i){ var cl=orc&&!C[i].emCurso&&C[i].naMedia&&v/C[i].peso>orc?' class="bad"':''; return '<td'+cl+'>'+m0(v)+'</td>' }).join('')+
         (temAtual?'<td'+(orc&&proj>orc?' class="bad"':'')+'>'+m0(proj)+'</td>':'')+'<td><b>'+m0(med)+'</b></td><td>'+(orc?m0(orc):'—')+'</td><td class="'+(r>1?'bad':r>.9?'warn':'good')+'">'+(orc?pct(r):'—')+'</td></tr>' }).join('')+
-    '<tr class="tot"><td>Gasto comum</td>'+C.map(function(c){ return '<td'+(lim&&!c.emCurso&&c.comum/c.peso>lim?' class="bad"':'')+'>'+m0(c.comum)+'</td>' }).join('')+
+    '<tr class="tot"><td>Gasto comum</td>'+C.map(function(c){ return '<td'+(lim&&!c.emCurso&&c.naMedia&&c.comum/c.peso>lim?' class="bad"':'')+'>'+m0(c.comum)+'</td>' }).join('')+
     (temAtual?'<td'+(lim&&atual.proj>lim?' class="bad"':'')+'>'+m0(atual.proj)+'</td>':'')+'<td>'+m0(mediaComum)+'</td><td>'+(lim?m0(lim):'—')+'</td><td class="'+(lim&&mediaComum>lim?'bad':'good')+'">'+(lim?pct(mediaComum/lim):'—')+'</td></tr>'+
-    '</tbody></table></div><p class="note" style="margin:6px 0 0">'+(temAtual?'* ciclo em curso, até '+fD(h)+'. ':'')+(F.some(function(c){return c.parcial})?'Ciclos parciais foram cortados nas datas escolhidas; na média e no vermelho contam proporcionalmente. ':'')+'Vermelho = acima do orçamento.'+(semOrc.length? ' Sem orçamento no app: '+semOrc.map(function(a){return NOMES[a.k]}).join(', ')+'.':'')+'</p></section>';
+    '</tbody></table></div><p class="note" style="margin:6px 0 0">'+(temAtual?'* ciclo em curso, até '+fD(h)+'. ':'')+notaBase+notaCurtos+(F.some(function(c){return c.parcial && !c.emCurso})?'Ciclos cortados nas datas escolhidas contam proporcionalmente na média. ':'')+'Vermelho = acima do orçamento.'+(semOrc.length? ' Sem orçamento no app: '+semOrc.map(function(a){return NOMES[a.k]}).join(', ')+'.':'')+'</p></section>';
 
   /* ritmo do ciclo atual */
   var restam=atual.dias-atual.decorridos, livre=lim-atual.comum, idealHoje=lim*atual.decorridos/atual.dias;
@@ -442,13 +454,13 @@ function render(){
       (atual.comum>idealHoje? '→ <b class="bad">'+m0(atual.comum-idealHoje)+' adiantado</b>.' : '→ <b class="good">'+m0(idealHoje-atual.comum)+' de folga</b>.')+
       (restam>0? ' Para fechar dentro do limite, sobram <b class="'+(livre<0?'bad':'')+'">'+m0(Math.max(0,livre))+'</b> para '+restam+' dias: <b>'+m0(Math.max(0,livre)/restam)+' por dia</b>'+
       ' (até agora a média foi '+m0(atual.comum/Math.max(1,atual.decorridos))+' por dia).' : '')+'</p>' : '')+
-    acumulado(F.filter(function(c){ return !c.parcial }).slice(-3).concat([atual]), lim)+'</section>';
+    acumulado(fech.filter(function(c){ return !c.parcial }).slice(-3).concat([atual]), lim)+'</section>';
 
   /* subcategorias */
   html+='<section class="card longa"><div class="ch"><h2>Para onde o dinheiro vai</h2><span class="note">loja, tipo de gasto ou item · '+RP+'</span></div><div class="tw"><table><thead><tr><th>Onde</th><th>Categoria</th><th>Compras</th><th>Total</th><th>Por ciclo</th><th>Ticket médio</th><th>% do comum</th><th>Último × anterior</th></tr></thead><tbody>'+
     subsTop.slice(0,15).map(function(s){ var vr=s.ant>0? (s.ult-s.ant)/s.ant : NaN;
       return '<tr><td class="t"><b>'+esc(s.nome)+'</b></td><td><span class="sw" style="background:'+COR[s.cat]+'"></span>'+NOMES[s.cat]+'</td><td>'+s.n+'</td><td>'+m0(s.tot)+'</td><td>'+m0(s.porCiclo)+'</td><td>'+money(s.tot/s.n)+'</td><td>'+pct(s.share)+'</td><td class="'+(vr>.1?'bad':vr<-.1?'good':'')+'">'+(isFinite(vr)?(vr>0?'▲ ':'▼ ')+pct(Math.abs(vr)):'—')+'</td></tr>' }).join('')+
-    '</tbody></table></div><p class="note" style="margin:6px 0 0">"Último × anterior" compara os dois últimos ciclos fechados'+(fech.length<2?' (precisa de 2 ciclos fechados)':'')+'.</p></section>';
+    '</tbody></table></div><p class="note" style="margin:6px 0 0">'+(usaAtual?'Total = ciclo atual até hoje; "por ciclo" = projeção até o fim do ciclo. ':'Total = soma dos ciclos usados na média; "por ciclo" = total ÷ ciclos. ')+'"Último × anterior" compara os dois últimos ciclos fechados'+(F.length<2||usaAtual?' (precisa de 2 ciclos fechados)':'')+'.</p></section>';
 
   /* índices */
   var comuns=[]; F.forEach(function(c){ c.l.forEach(function(l){ if(!ehParcela(l)) comuns.push(l) }) });
@@ -479,7 +491,7 @@ function render(){
     maiores.map(function(l){ return '<tr><td>'+fD(l.data)+'</td><td class="t"><span class="sw" style="background:'+COR[l.cat]+'"></span>'+esc(l.desc||subDe(l))+'</td><td>'+money(val(l))+'</td></tr>' }).join('')+
     '</tbody></table></div></section>';
 
-  html+='</div><p class="foot">Gasto comum = Supermercado + Carro + Diversos + Viagens, o que o Limite do app controla. Parcelados não entram neste relatório. Ciclos = o Período das Configurações do app ('+fD(d.periodo.inicio)+' → '+fD(d.periodo.fim)+'), repetido mês a mês. Projeção do ciclo atual = gasto até hoje ÷ dias decorridos × dias do ciclo. Médias, índices e "onde atacar" usam os ciclos fechados do período escolhido ('+RP+'), com ciclos cortados contando proporcionalmente; o Ritmo mostra sempre o ciclo de hoje.</p>';
+  html+='</div><p class="foot">Gasto comum = Supermercado + Carro + Diversos + Viagens, o que o Limite do app controla. Parcelados não entram neste relatório. Ciclos = o Período das Configurações do app ('+fD(d.periodo.inicio)+' → '+fD(d.periodo.fim)+'), repetido mês a mês. Projeção do ciclo atual = gasto até hoje ÷ dias decorridos × dias do ciclo. Médias, índices e "onde atacar" usam os ciclos fechados do período escolhido ('+RP+'), com ciclos cortados contando proporcionalmente; ciclo cortado com menos da metade dos dias fica fora; sem nenhum ciclo fechado, a base é a projeção do ciclo atual. O Ritmo mostra sempre o ciclo de hoje.</p>';
   el.innerHTML=html;
   ligarTips();
 }
