@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agenda</title>
+<!-- Atalho da Agenda do Luiz para a tela do iPhone (13/11/2026).
+     O ícone criado direto no claude.ai abre a página inicial do Claude;
+     este endereço próprio leva sempre para a agenda. -->
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Agenda">
+<meta name="theme-color" content="#0d1014">
+<style>
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0d1014;color:#eef1f5;font:16px/1.5 -apple-system,system-ui,sans-serif;text-align:center;padding:24px}
+  a{display:inline-block;margin-top:14px;background:#7fa7d9;color:#0b1320;font-weight:700;text-decoration:none;padding:12px 22px;border-radius:10px}
+  img{width:72px;height:72px;border-radius:16px}
+  p{color:#aab3bf;font-size:14px;max-width:32ch;margin:12px auto 0}
+</style>
+</head>
+<body>
+<div>
+  <img src="apple-touch-icon.png" alt="">
+  <h1 style="font-size:20px;margin:12px 0 0">Agenda do Luiz</h1>
+  <a id="ir" href="https://claude.ai/artifact/QYaPWiGV3unmGz35qsbuNz">Abrir a agenda</a>
+  <p id="nota">Abrindo…</p>
+</div>
+<script>
+  /* ao abrir pelo ícone, vai direto para a agenda; o botão fica de reserva */
+  var URL_AGENDA='https://claude.ai/artifact/QYaPWiGV3unmGz35qsbuNz';
+  var instalando = location.hash==='#instalar';
+  if(instalando){ document.getElementById('nota').textContent='Agora toque em Compartilhar e em Adicionar à Tela de Início.'; }
+  else { setTimeout(function(){ location.replace(URL_AGENDA) }, 150); setTimeout(function(){ document.getElementById('nota').textContent='Se não abrir sozinho, toque no botão.' }, 2500); }
+</script>
+</body>
+</html>
