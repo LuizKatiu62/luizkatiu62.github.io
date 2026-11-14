@@ -1,4 +1,4 @@
-const CACHE = 'gastos-v199';
+const CACHE = 'gastos-v200';
 
 const CORE_ASSETS = [
   './index.html',

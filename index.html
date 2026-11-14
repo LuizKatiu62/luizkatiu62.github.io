@@ -6,7 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="app-version" content="20260607-180">
+<meta name="app-version" content="20261114-181">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Gastos">
@@ -3394,52 +3394,6 @@ function renderizarRelatorio() {
     '</div>'+
     '</div>';
 
-  // ── Dias até o Limite por Categoria ──
-  var diasLimHtml = '';
-  var catsDias = [
-    { cat:'carro',    ico:'🚗', cor:'#e53935' },
-    { cat:'mercado',  ico:'🛒', cor:'#43a047' },
-    { cat:'diversos', ico:'🛍️', cor:'#fb8c00' },
-    { cat:'viagens',  ico:'✈️', cor:'#0284c7' }
-  ];
-  var temCatComOrc = catsDias.some(function(c){ return (orc[c.cat]||0) > 0; });
-  if (temCatComOrc) {
-    var linhasCat = catsDias.map(function(c) {
-      var orcCat  = orc[c.cat] || 0;
-      if (!orcCat) return '';
-      var gastoCat = tots[c.cat] || 0;
-      var dispCat  = orcCat - gastoCat;
-      var diasCom  = Object.keys(porDiaCat[c.cat]).length;
-      var mediaCat = diasCom > 0 ? gastoCat / diasCom : 0;
-      var jaExcedeu = dispCat <= 0;
-      var diasCat   = (!jaExcedeu && mediaCat > 0) ? Math.floor(dispCat / mediaCat) : 0;
-      var semRitmo  = mediaCat === 0;
-      var corD = jaExcedeu?'#ef4444':diasCat<=7?'#f97316':diasCat<=15?'#eab308':'#22c55e';
-      var numTxt = jaExcedeu ? '—' : semRitmo ? '∞' : String(diasCat);
-      var subTxt = jaExcedeu
-        ? 'Limite excedido em '+formatar(Math.abs(dispCat))
-        : semRitmo
-          ? 'Sem gastos no período'
-          : formatar(mediaCat)+'/dia · sobra '+formatar(dispCat);
-      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #f3f4f6">' +
-        '<div style="font-size:22px;width:32px;text-align:center;flex-shrink:0">'+c.ico+'</div>' +
-        '<div style="flex:1;min-width:0">' +
-          '<div style="font-size:13px;font-weight:700;color:#111827">'+NOMES[c.cat]+'</div>' +
-          '<div style="font-size:10px;color:#9ca3af;margin-top:1px">'+subTxt+'</div>' +
-        '</div>' +
-        '<div style="text-align:right;flex-shrink:0">' +
-          '<div style="font-size:26px;font-weight:900;color:'+corD+';line-height:1;letter-spacing:-1px">'+numTxt+'</div>' +
-          '<div style="font-size:9px;font-weight:700;color:'+corD+';text-transform:uppercase;letter-spacing:.4px">'+(jaExcedeu||semRitmo?'':'dias')+'</div>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-    diasLimHtml =
-      '<div class="card" style="margin-bottom:8px;background:#fffde7;border:1px solid #fdd835">' +
-      '<div class="card-titulo">⏱️ Dias até o Limite — por Categoria</div>' +
-      linhasCat +
-      '</div>';
-  }
-
   // ── Ações ──
   var acoesHtml =
     '<div class="card">' +
@@ -3448,7 +3402,7 @@ function renderizarRelatorio() {
 
   el.innerHTML =
     '<div style="font-size:12px;color:#aaa;font-weight:600;margin-bottom:10px;text-align:center">📅 '+perLabel+'</div>' +
-    metHtml + barLimHtml + catsHtml + topHtml + diasLimHtml + heatmapHtml + semanaHtml + acoesHtml;
+    metHtml + barLimHtml + catsHtml + topHtml + heatmapHtml + semanaHtml + acoesHtml;
 }
 
 // ─────────────────────────────
