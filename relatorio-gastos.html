@@ -321,7 +321,11 @@ function restanteCiclo(d){
   R.lugares.sort(function(a,b){ return b.esperV-a.esperV });
   return R;
 }
-function vezes(x){ x=+x||0; var r=Math.round(x*10)/10; return String(r).replace('.',',')+'×' }
+/* frequência em número inteiro, para ler fácil: "17 vezes", "1 vez", "menos de 1 vez" */
+function vezes(x){ x=+x||0; var r=Math.round(x); return x<0.75? 'menos de 1 vez' : r===1? '1 vez' : r+' vezes' }
+/* idas esperadas nos dias que faltam: "cerca de 2 vezes", "1 a 2 vezes", "talvez 1 (40% de chance)" */
+function idasFaltam(e){ if(e<0.95) return 'talvez 1 ('+Math.round(e*100)+'% de chance)'; var r=Math.round(e);
+  return Math.abs(e-r)<0.25? 'cerca de '+r+(r===1?' vez':' vezes') : Math.floor(e)+' a '+Math.ceil(e)+' vezes' }
 
 /* ───────── gráficos ───────── */
 var TIPS=[];
@@ -470,7 +474,7 @@ function render(){
               return '<b>'+esc(s.nome)+'</b> ('+m0(s.tot)+' em '+s.n+(s.n===1?' ida':' idas')+(f&&f.nH? '; o normal é '+vezes(f.freq)+' por ciclo' : '')+')' }).join(' e ')+'.' : '')+'</li>';
         }
         return '<li><b>'+NOMES[a.k]+'</b>: gasta em média <b class="v">'+m0(a.med)+'</b> por ciclo, orçamento <b class="v">'+m0(a.orc)+'</b> → <b class="v bad">'+m0(a.exc)+' acima ('+pct(a.med/a.orc)+' do orçamento)</b>. Estourou em '+a.estouros+' de '+nC+' ciclos.'+
-          (sub.length? ' O peso maior está em '+sub.map(function(s){ return '<b>'+esc(s.nome)+'</b> ('+m0(s.porCiclo)+'/ciclo, '+vezes(s.n/nEq)+' por ciclo de '+m0(s.tot/s.n)+')' }).join(' e ')+'.' : '')+'</li>' }).join('')+
+          (sub.length? ' O peso maior está em '+sub.map(function(s){ return '<b>'+esc(s.nome)+'</b> ('+m0(s.porCiclo)+'/ciclo: '+vezes(s.n/nEq)+' por ciclo, '+m0(s.tot/s.n)+' cada)' }).join(' e ')+'.' : '')+'</li>' }).join('')+
       '</ol>'+(lim>0 && mediaComum>lim? '<p class="note" style="margin:8px 0 0">'+(usaAtual?
         (restam>0? 'Faltam '+restam+(restam===1?' dia':' dias')+'. '+(atual.comum>=lim? 'O limite de '+m0(lim)+' já foi passado em <b class="bad">'+m0(atual.comum-lim)+'</b>: o que dá para fazer agora é não somar mais, só o essencial até '+fD(atual.fim)+'.' : 'Sobram <b>'+m0(lim-atual.comum)+'</b> do limite, mas pela sua frequência devem entrar '+m0(R.tot)+'. Corte ou adie '+m0(mediaComum-lim)+' disso.') : 'O ciclo fecha hoje.')+' Para o próximo ciclo, veja abaixo onde você foi mais vezes que o normal.'
         : 'Para voltar ao limite, o gasto comum precisa cair <b class="bad">'+m0(mediaComum-lim)+' por ciclo</b> (cerca de '+m0((mediaComum-lim)/ (atual.dias/7))+' por semana).')+'</p>':'')+'</section>';
@@ -560,17 +564,27 @@ function blocoFrequencia(at, lim){
     ' → o ciclo fecha em <b class="'+(lim>0&&at.proj>lim?'bad':'')+'">'+m0(at.proj)+'</b>'+(lim>0? ' ('+pct(at.proj/lim)+' do limite)' : '')+'.';
   else h+='O ciclo fecha hoje em <b class="'+(lim>0&&at.proj>lim?'bad':'')+'">'+m0(at.proj)+'</b>.';
   h+='</p>';
+  /* mesmo nome em categorias diferentes (ex.: dois "Outros"): mostra a categoria junto */
+  var cont={}; R.lugares.forEach(function(s){ var k=s.nome.toLowerCase(); cont[k]=(cont[k]||0)+1 });
+  function nomeL(s){ return '<b>'+esc(s.nome)+'</b>'+(cont[s.nome.toLowerCase()]>1? ' <span class="note">('+(NOMES[s.cat]||s.cat)+')</span>' : '') }
   var vem=R.lugares.filter(function(s){ return s.esperV>=5 }).slice(0,6);
-  if(R.rest>0 && vem.length && !R.linear) h+='<p class="note" style="margin:0 0 4px"><b>O que ainda deve entrar até '+fD(R.ciclo.fim)+'</b></p><ul style="margin:0 0 10px;padding-left:20px">'+
-    vem.map(function(s){ return '<li><b>'+esc(s.nome)+'</b>: ≈ '+m0(s.esperV)+' (você vai '+vezes(s.freq)+' por ciclo, '+money(s.ticket,0)+' por ida; neste ciclo foi '+s.n+'×)</li>' }).join('')+'</ul>';
+  if(R.rest>0 && vem.length && !R.linear){
+    var ex=vem.filter(function(s){ return s.esperN<0.95 })[0];
+    h+='<p class="note" style="margin:0 0 4px"><b>O que ainda deve entrar até '+fD(R.ciclo.fim)+'</b> · pelo seu costume nos últimos '+R.nHist+(R.nHist===1?' ciclo':' ciclos')+'</p>'+
+      '<div class="tw"><table><thead><tr><th>Onde</th><th>Você costuma ir</th><th>Neste ciclo, até hoje</th><th>Nos '+R.rest+(R.rest===1?' dia':' dias')+' que faltam</th><th>Entra na projeção</th></tr></thead><tbody>'+
+      vem.map(function(s){ return '<tr><td class="t">'+nomeL(s)+'</td><td class="t">'+vezes(s.freq)+' por ciclo, '+m0(s.ticket)+' cada</td><td>'+(s.n? s.n+(s.n===1?' vez':' vezes') : 'nenhuma')+'</td><td class="t">'+idasFaltam(s.esperN)+'</td><td><b>'+m0(s.esperV)+'</b></td></tr>' }).join('')+
+      '</tbody></table></div><p class="note" style="margin:4px 0 10px">Como ler: nos dias que faltam, conta só as idas que ainda cabem no seu costume. '+
+      (ex? 'Quando é menos de uma ida, entra só a parte da chance: '+esc(ex.nome)+' tem '+Math.round(ex.esperN*100)+'% de chance × '+m0(ex.ticket)+' por ida ≈ '+m0(ex.esperV)+'. ' : '')+
+      'Se você não for, o ciclo fecha abaixo da projeção.</p>';
+  }
   if(!R.linear){
     var mais=R.lugares.filter(function(s){ return s.n>=2 && s.n>=s.freq+1 }).map(function(s){ s.extraV=s.v - s.freq*(s.nH? s.vH/s.nH : 0); return s })
       .filter(function(s){ return s.extraV>=10 }).sort(function(a,b){ return b.extraV-a.extraV }).slice(0,6);
     var novos=R.lugares.filter(function(s){ return !s.nH && s.v>=50 }).sort(function(a,b){ return b.v-a.v }).slice(0,4);
     if(mais.length) h+='<p class="note" style="margin:0 0 4px"><b>Neste ciclo você foi mais vezes que o normal</b></p><ul style="margin:0 0 10px;padding-left:20px">'+
-      mais.map(function(s){ return '<li><b>'+esc(s.nome)+'</b>: '+s.n+' idas, '+m0(s.v)+' (o normal é '+vezes(s.freq)+' por ciclo, ≈ '+m0(s.vH/R.nHist)+') → <span class="bad">'+m0(s.extraV)+' a mais</span></li>' }).join('')+'</ul>';
+      mais.map(function(s){ return '<li>'+nomeL(s)+': '+s.n+' vezes, '+m0(s.v)+' (o normal é '+vezes(s.freq)+' por ciclo, cerca de '+m0(s.vH/R.nHist)+') → <span class="bad">'+m0(s.extraV)+' a mais</span></li>' }).join('')+'</ul>';
     if(novos.length) h+='<p class="note" style="margin:0 0 4px"><b>Gastos que não aparecem nos ciclos anteriores</b> (não foram projetados de novo)</p><ul style="margin:0 0 10px;padding-left:20px">'+
-      novos.map(function(s){ return '<li><b>'+esc(s.nome)+'</b>: '+m0(s.v)+(s.n>1?' em '+s.n+' vezes':'')+'</li>' }).join('')+'</ul>';
+      novos.map(function(s){ return '<li>'+nomeL(s)+': '+m0(s.v)+(s.n>1?' em '+s.n+' vezes':'')+'</li>' }).join('')+'</ul>';
   }
   return h;
 }
