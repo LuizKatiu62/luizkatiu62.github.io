@@ -98,10 +98,9 @@ svg .lbl{fill:var(--tx);font-weight:600}
   .wrap{max-width:none;padding:0}
   .voltar,.barra .btn,#tip,.periodo{display:none!important}
   .grid,.kpis{display:block!important}
-  .card{display:block;break-inside:avoid;page-break-inside:avoid;margin:0 0 10px;border-color:#ccc}
-  .card.c6{display:inline-block;vertical-align:top;width:49.3%}
-  .card.c6+.card.c6{margin-left:1.2%}
-  .card.longa{break-inside:auto;page-break-inside:auto}
+  /* Safari não divide entre páginas um bloco "inteiro" ou inline-block que não cabe: corta o resto.
+     Por isso os quadros podem quebrar entre páginas e ficam um embaixo do outro (16/11/2026). */
+  .card,.card.c6,.card.longa{display:block;width:auto;margin:0 0 10px;border-color:#ccc;break-inside:auto;page-break-inside:auto}
   .kpis{border:1px solid #ccc}
   .kpi{display:inline-block;width:24.6%;vertical-align:top;border-bottom:0}
   svg,tr,li,.bul{break-inside:avoid;page-break-inside:avoid}
@@ -328,7 +327,7 @@ function vezes(x){ x=+x||0; var r=Math.round(x*10)/10; return String(r).replace(
 var TIPS=[];
 function niceMax(v){ if(v<=0) return 1; var p=Math.pow(10,Math.floor(Math.log10(v))), f=v/p; var st=[1,1.2,1.6,2,2.4,3,4,5,6,8,10].find(function(x){ return f<=x*1.0001 }); return st*p }
 var PRINT=false;
-function largura(def){ if(PRINT) return def>=700?740:360; var c=document.getElementById('conteudo'); var cw=(c&&c.clientWidth)||def; return Math.round(Math.min(def, Math.max(320, cw-34))) }
+function largura(def){ if(PRINT) return 740; var c=document.getElementById('conteudo'); var cw=(c&&c.clientWidth)||def; return Math.round(Math.min(def, Math.max(320, cw-34))) }
 
 /* barras empilhadas por ciclo + linha do limite */
 function barrasCiclo(C, lim, cats){
