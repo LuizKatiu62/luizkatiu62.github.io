@@ -71,9 +71,15 @@
 
     /* por lugar: semana × normal */
     var m = {};
-    function k(l){ return l.cat+'|'+limpo(sub(l)).toLowerCase() }
-    S.forEach(function(l){ var x=m[k(l)]||(m[k(l)]={nome:sub(l), cat:l.cat, sem:0, n:0, base:0, nb:0}); x.sem+=val(l); x.n++ });
-    B.forEach(function(l){ var x=m[k(l)]||(m[k(l)]={nome:sub(l), cat:l.cat, sem:0, n:0, base:0, nb:0}); x.base+=val(l); x.nb++ });
+    /* mesmo lugar com nomes escritos diferente (McDonald's / McDonalds / Mc Donalds) vira um só;
+       "compras" = DIAS em que comprou ali (várias peças lançadas no mesmo dia = 1 compra) (16/11/2026) */
+    function norm(t){ return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'') }
+    function k(l){ return l.cat+'|'+(norm(limpo(sub(l)))||limpo(sub(l)).toLowerCase()) }
+    function pega(l){ var q=k(l), x=m[q]||(m[q]={nome:sub(l), cat:l.cat, sem:0, n:0, base:0, nb:0, dS:{}, dB:{}, gr:{}});
+      var g=sub(l); x.gr[g]=(x.gr[g]||0)+1; if(x.gr[g]>(x.gr[x.nome]||0)) x.nome=g;   /* mostra a grafia mais usada */
+      return x }
+    S.forEach(function(l){ var x=pega(l); x.sem+=val(l); if(!x.dS[l.data]){ x.dS[l.data]=1; x.n++ } });
+    B.forEach(function(l){ var x=pega(l); x.base+=val(l); if(!x.dB[l.data]){ x.dB[l.data]=1; x.nb++ } });
     var lugares = Object.keys(m).map(function(q){ var x=m[q]; x.normal=x.base/semBase; x.nNormal=x.nb/semBase; x.exc=x.sem-x.normal; return x });
     /* compra "de vez em quando" (menos de 1 por semana): uma compra só, no valor de costume, não é vazamento (16/11/2026) */
     lugares.forEach(function(x){ x.raro = x.nb>0 && x.nb/semBase<0.75; x.ticket = x.nb? x.base/x.nb : 0 });

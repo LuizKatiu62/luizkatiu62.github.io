@@ -143,7 +143,7 @@ svg .lbl{fill:var(--tx);font-weight:600}
   <div id="conteudo"><div class="vazio">Carregando…</div></div>
 </div>
 
-<script src="./semana-gastos.js?v=4"></script>
+<script src="./semana-gastos.js?v=5"></script>
 <script>
 /* ───────── mesmos nomes, cores e regras do app ───────── */
 var FB_CONFIG = {
@@ -297,7 +297,9 @@ function calcular(d, lista){
    Ex.: Costco 2×/ciclo e você já foi 2× → não conta mais nenhuma ida.
    Compra que não se repete (sem histórico) não é projetada de novo.
    Sem nenhum ciclo fechado no app, cai no ritmo por dia. */
-function chaveLugar(l){ return l.cat+'|'+subDe(l).toLowerCase() }
+/* nome comparável: sem acento, emoji, espaço ou apóstrofo (McDonald's = McDonalds = Mc Donalds) (16/11/2026) */
+function normNome(t){ return String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'') }
+function chaveLugar(l){ return l.cat+'|'+(normNome(subDe(l))||subDe(l).toLowerCase()) }
 function historico(d){
   var p=d.periodo, h=hojeIso(), k=idxAtual(p,h), L=d.lancamentos||[];
   var prim=L.reduce(function(m,l){ return l.data && l.data<m ? l.data : m }, h), H=[];
@@ -311,8 +313,9 @@ function restanteCiclo(d){
   var R={cat:{}, tot:0, lugares:[], porChave:{}, nHist:H.length, rest:rest, linear:!H.length, ciclo:at};
   var m={};
   function pega(l){ var k=chaveLugar(l); if(!m[k]) m[k]={chave:k, nome:subDe(l), cat:l.cat, nH:0, vH:0, n:0, v:0}; return m[k] }
-  H.forEach(function(c){ L.forEach(function(l){ if(ehParcela(l) || l.data<c.inicio || l.data>c.fim) return; var s=pega(l); s.nH++; s.vH+=val(l) }) });
-  L.forEach(function(l){ if(ehParcela(l) || l.data<at.inicio || l.data>h) return; var s=pega(l); s.n++; s.v+=val(l) });
+  /* idas = DIAS em que comprou ali (várias peças no mesmo dia = 1 ida) */
+  H.forEach(function(c){ L.forEach(function(l){ if(ehParcela(l) || l.data<c.inicio || l.data>c.fim) return; var s=pega(l); s.vH+=val(l); s.dH=s.dH||{}; if(!s.dH[l.data]){ s.dH[l.data]=1; s.nH++ } }) });
+  L.forEach(function(l){ if(ehParcela(l) || l.data<at.inicio || l.data>h) return; var s=pega(l); s.v+=val(l); s.dA=s.dA||{}; if(!s.dA[l.data]){ s.dA[l.data]=1; s.n++ } });
   Object.keys(m).forEach(function(k){ var s=m[k];
     if(R.linear){ s.freq=0; s.ticket=s.n? s.v/s.n : 0; s.esperV=at.decorridos? s.v*rest/at.decorridos : 0; s.esperN=s.ticket? s.esperV/s.ticket : 0 }
     else { s.freq=s.nH/H.length; s.ticket=s.nH? s.vH/s.nH : 0;
@@ -470,7 +473,7 @@ function render(){
           return '<li><b>'+NOMES[a.k]+'</b>: já gastou <b class="v">'+m0(ja)+'</b> de <b class="v">'+m0(a.orc)+'</b>'+
             (restam>0? (vem>=1? '; pela sua frequência ainda devem entrar <b class="v">'+m0(vem)+'</b>' : '; pela sua frequência não deve entrar mais nada')+' → fecha em <b class="v">'+m0(a.med)+'</b>' : '')+
             ', <b class="v bad">'+m0(a.exc)+' acima ('+pct(a.med/a.orc)+' do orçamento)</b>.'+
-            (sub.length? ' O peso maior está em '+sub.map(function(s){ var f=R.porChave[s.cat+'|'+s.nome.toLowerCase()];
+            (sub.length? ' O peso maior está em '+sub.map(function(s){ var f=R.porChave[s.cat+'|'+(normNome(s.nome)||s.nome.toLowerCase())];
               return '<b>'+esc(s.nome)+'</b> ('+m0(s.tot)+' em '+s.n+(s.n===1?' ida':' idas')+(f&&f.nH? '; você costuma ir '+vezes(f.freq)+' por ciclo' : '')+')' }).join(' e ')+'.' : '')+'</li>';
         }
         return '<li><b>'+NOMES[a.k]+'</b>: gasta em média <b class="v">'+m0(a.med)+'</b> por ciclo, orçamento <b class="v">'+m0(a.orc)+'</b> → <b class="v bad">'+m0(a.exc)+' acima ('+pct(a.med/a.orc)+' do orçamento)</b>. Estourou em '+a.estouros+' de '+nC+' ciclos.'+
@@ -594,9 +597,9 @@ function linhaI(a,b,c){ return '<tr><td class="t"><b>'+a+'</b></td><td>'+b+'</td
 function topSubs(C, nEq, RF){
   var m={}, comumT=0, ult=C[C.length-1], ant=C[C.length-2];
   C.forEach(function(c){ c.l.forEach(function(l){ if(ehParcela(l)) return;
-    var nome=subDe(l), k=l.cat+'|'+nome.toLowerCase(); comumT+=val(l);
-    if(!m[k]) m[k]={nome:nome, cat:l.cat, tot:0, n:0, ult:0, ant:0};
-    m[k].tot+=val(l); m[k].n++;
+    var nome=subDe(l), k=l.cat+'|'+(normNome(nome)||nome.toLowerCase()); comumT+=val(l);
+    if(!m[k]) m[k]={nome:nome, cat:l.cat, tot:0, n:0, ult:0, ant:0, d:{}};
+    m[k].tot+=val(l); if(!m[k].d[l.data]){ m[k].d[l.data]=1; m[k].n++ }   /* compras = dias com compra ali */
     if(c===ult) m[k].ult+=val(l); if(c===ant) m[k].ant+=val(l); }) });
   return Object.keys(m).map(function(k){ var s=m[k]; s.porCiclo=RF? s.tot+((RF.porChave[k]||{}).esperV||0) : s.tot/(nEq||C.length||1); s.share=comumT? s.tot/comumT : 0; return s }).sort(function(a,b){ return b.tot-a.tot });
 }
