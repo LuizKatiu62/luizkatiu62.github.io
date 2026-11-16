@@ -441,7 +441,8 @@ function render(){
     (function(){ var rest=atual.dias-atual.decorridos, livre=lim-atual.comum;
       if(!(lim>0)) return kpi('Pode gastar por dia','—','defina o Limite nas Configurações');
       if(rest<=0) return kpi('Pode gastar por dia','—','último dia do ciclo');
-      return kpi('Pode gastar por dia', '<span class="'+(livre<0?'bad':'')+'">'+m0(Math.max(0,livre)/rest)+'</span>', (livre<0? m0(-livre)+' acima do limite':m0(livre)+' livres')+' · '+rest+' dias até '+fD(atual.fim)) })()+
+      if(livre<=0) return kpi('Pode gastar por dia', '<span class="bad">CA$ 0</span>', 'limite passado em '+m0(-livre)+' · só o essencial até '+fD(atual.fim));
+      return kpi('Pode gastar por dia', m0(livre/rest), m0(livre)+' livres · '+rest+' dias até '+fD(atual.fim)) })()+
   '</div>';
 
   /* SEMANA PASSADA: onde vazou e o que fazer (semana-gastos.js) */
@@ -502,7 +503,9 @@ function render(){
   /* ritmo do ciclo atual */
   var restam=atual.dias-atual.decorridos, livre=lim-atual.comum, idealHoje=lim*atual.decorridos/atual.dias;
   html+='<section class="card"><div class="ch"><h2>Ritmo do ciclo atual</h2><span class="note">'+esc(atual.rot)+' · dia '+atual.decorridos+' de '+atual.dias+'</span></div>'+
-    (lim>0? '<p style="margin:0 0 8px">Até hoje você gastou <b>'+m0(atual.comum)+'</b>; no ritmo do limite seriam <b>'+m0(idealHoje)+'</b> '+
+    (lim>0 && livre<=0? '<p style="margin:0 0 8px">Até hoje você gastou <b>'+m0(atual.comum)+'</b>. Você já passou do limite de '+m0(lim)+' em <b class="bad">'+m0(-livre)+'</b>.'+
+      (restam>0? ' Até '+fD(atual.fim)+' (faltam '+restam+(restam===1?' dia':' dias')+'), só o essencial.' : '')+'</p>' :
+    lim>0? '<p style="margin:0 0 8px">Até hoje você gastou <b>'+m0(atual.comum)+'</b>; no ritmo do limite seriam <b>'+m0(idealHoje)+'</b> '+
       (atual.comum>idealHoje? '→ <b class="bad">'+m0(atual.comum-idealHoje)+' adiantado</b>.' : '→ <b class="good">'+m0(idealHoje-atual.comum)+' de folga</b>.')+
       (restam>0? ' Para fechar dentro do limite, sobram <b class="'+(livre<0?'bad':'')+'">'+m0(Math.max(0,livre))+'</b> para '+restam+' dias: <b>'+m0(Math.max(0,livre)/restam)+' por dia</b>'+
       ' (até agora a média foi '+m0(atual.comum/Math.max(1,atual.decorridos))+' por dia).' : '')+'</p>' : '')+
