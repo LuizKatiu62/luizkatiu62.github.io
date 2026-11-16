@@ -90,19 +90,33 @@
     var noCic = L.filter(function(l){ return l.data>=cic.inicio && l.data<=hoje }).reduce(function(a,l){ return a+val(l) },0);
     var decor = nd(cic.inicio, hoje), resta = Math.max(0, diasCic-decor);
     var ideal = lim*decor/diasCic, livre = lim-noCic, porDia = resta? Math.max(0,livre)/resta : 0;
+    /* O teto de cada lugar não pode passar do que sobra do limite do ciclo (16/11/2026).
+       Se o limite já acabou: nada até o fim do ciclo; o teto normal só volta no ciclo novo. */
+    var domAtual = add(hoje, 6-((w+6)%7)), novoCic = add(cic.fim,1)<=domAtual ? add(cic.fim,1) : null;
+    var acabou = lim>0 && livre<=0;
+    function teto(nome, normal, nVezes){
+      var vezes = nVezes? 'no máximo <b>'+nVezes+(nVezes===1?' vez':' vezes')+'</b>, com ' : '';
+      if(acabou) return 'O limite do ciclo já acabou: até '+fD(cic.fim)+', <b>nada</b> em '+esc(nome)+'.'+
+        (novoCic? ' No ciclo novo, a partir de '+fD(novoCic)+', '+vezes+'teto de <b>'+m0(normal)+' por semana</b>.' : '');
+      var t = lim>0 ? Math.min(normal, livre) : normal;
+      return 'Esta semana, '+vezes+'teto de <b>'+m0(t)+'</b>'+(lim>0 && t<normal ? ' (é tudo o que sobra do limite até '+fD(cic.fim)+', para todas as compras)' : '')+'.';
+    }
 
     /* ações: no máximo 4, da mais importante para a menos */
     var acoes = [];
     vaz.slice(0,2).forEach(function(x){
       var nome = limpo(x.nome);
       if(/restaur|lanche|caf[eé]|coffee|tim ?hortons|fast|pizza|delivery|uber ?eats|skip/i.test(nome))
-        acoes.push('<b>'+esc(nome)+'</b>: '+x.n+' vezes na semana passada ('+m0(x.sem)+'). O seu normal é '+Math.max(1,Math.round(x.nNormal))+' por semana. Esta semana, no máximo <b>'+Math.max(1,Math.round(x.nNormal))+'</b>, com teto de <b>'+m0(x.normal)+'</b>.');
+        acoes.push('<b>'+esc(nome)+'</b>: '+x.n+' vezes na semana passada ('+m0(x.sem)+'). O seu normal é '+Math.max(1,Math.round(x.nNormal))+' por semana. '+teto(nome, x.normal, Math.max(1,Math.round(x.nNormal))));
       else if(ehOutros(x.nome))
         acoes.push('<b>'+esc(nome)+' ('+NOMES[x.cat]+')</b> subiu para '+m0(x.sem)+'. Ao lançar, escolha a subcategoria certa: sem saber onde foi, não dá para cortar.');
       else
-        acoes.push('<b>'+esc(nome)+'</b>: '+m0(x.sem)+' em '+x.n+(x.n===1?' compra':' compras')+', '+m0(x.exc)+' acima do seu normal. Teto para esta semana: <b>'+m0(Math.max(x.normal,0))+'</b>.');
+        acoes.push('<b>'+esc(nome)+'</b>: '+m0(x.sem)+' em '+x.n+(x.n===1?' compra':' compras')+', '+m0(x.exc)+' acima do seu normal. '+teto(nome, Math.max(x.normal,0)));
     });
-    if(lim>0 && resta>0){
+    if(acabou){
+      acoes.unshift('Ciclo '+fD(cic.inicio)+' – '+fD(cic.fim)+': o limite de '+m0(lim)+' já foi passado em <b class="bad" style="color:#c23a2b">'+m0(-livre)+'</b>. Não sobra orçamento: até '+fD(cic.fim)+', só o essencial'+
+        (novoCic? '. O ciclo novo começa em '+fD(novoCic)+'.' : '.'));
+    } else if(lim>0 && resta>0){
       if(noCic>ideal) acoes.push('Ciclo '+fD(cic.inicio)+' – '+fD(cic.fim)+': '+m0(noCic-ideal)+' adiantado. Para fechar no limite, gaste no máximo <b>'+m0(porDia)+' por dia</b> nos próximos '+resta+' dias.');
       else acoes.push('Ciclo '+fD(cic.inicio)+' – '+fD(cic.fim)+': você tem '+m0(ideal-noCic)+' de folga. Dá para gastar até <b>'+m0(porDia)+' por dia</b> até o fim do ciclo e ainda fechar no limite.');
     }
