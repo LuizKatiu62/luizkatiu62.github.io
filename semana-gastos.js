@@ -96,8 +96,7 @@
     var acabou = lim>0 && livre<=0;
     function teto(nome, normal, nVezes){
       var vezes = nVezes? 'no máximo <b>'+nVezes+(nVezes===1?' vez':' vezes')+'</b>, com ' : '';
-      if(acabou) return 'O limite do ciclo já acabou: até '+fD(cic.fim)+', <b>nada</b> em '+esc(nome)+'.'+
-        (novoCic? ' No ciclo novo, a partir de '+fD(novoCic)+', '+vezes+'teto de <b>'+m0(normal)+' por semana</b>.' : '');
+      if(acabou) return 'O limite do ciclo já acabou: até '+fD(cic.fim)+', <b>nada</b> em '+esc(nome)+'.';
       var t = lim>0 ? Math.min(normal, livre) : normal;
       return 'Esta semana, '+vezes+'teto de <b>'+m0(t)+'</b>'+(lim>0 && t<normal ? ' (é tudo o que sobra do limite até '+fD(cic.fim)+', para todas as compras)' : '')+'.';
     }
