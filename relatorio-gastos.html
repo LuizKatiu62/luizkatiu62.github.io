@@ -143,7 +143,7 @@ svg .lbl{fill:var(--tx);font-weight:600}
   <div id="conteudo"><div class="vazio">Carregando…</div></div>
 </div>
 
-<script src="./semana-gastos.js?v=3"></script>
+<script src="./semana-gastos.js?v=4"></script>
 <script>
 /* ───────── mesmos nomes, cores e regras do app ───────── */
 var FB_CONFIG = {
@@ -471,12 +471,12 @@ function render(){
             (restam>0? (vem>=1? '; pela sua frequência ainda devem entrar <b class="v">'+m0(vem)+'</b>' : '; pela sua frequência não deve entrar mais nada')+' → fecha em <b class="v">'+m0(a.med)+'</b>' : '')+
             ', <b class="v bad">'+m0(a.exc)+' acima ('+pct(a.med/a.orc)+' do orçamento)</b>.'+
             (sub.length? ' O peso maior está em '+sub.map(function(s){ var f=R.porChave[s.cat+'|'+s.nome.toLowerCase()];
-              return '<b>'+esc(s.nome)+'</b> ('+m0(s.tot)+' em '+s.n+(s.n===1?' ida':' idas')+(f&&f.nH? '; o normal é '+vezes(f.freq)+' por ciclo' : '')+')' }).join(' e ')+'.' : '')+'</li>';
+              return '<b>'+esc(s.nome)+'</b> ('+m0(s.tot)+' em '+s.n+(s.n===1?' ida':' idas')+(f&&f.nH? '; você costuma ir '+vezes(f.freq)+' por ciclo' : '')+')' }).join(' e ')+'.' : '')+'</li>';
         }
         return '<li><b>'+NOMES[a.k]+'</b>: gasta em média <b class="v">'+m0(a.med)+'</b> por ciclo, orçamento <b class="v">'+m0(a.orc)+'</b> → <b class="v bad">'+m0(a.exc)+' acima ('+pct(a.med/a.orc)+' do orçamento)</b>. Estourou em '+a.estouros+' de '+nC+' ciclos.'+
           (sub.length? ' O peso maior está em '+sub.map(function(s){ return '<b>'+esc(s.nome)+'</b> ('+m0(s.porCiclo)+'/ciclo: '+vezes(s.n/nEq)+' por ciclo, '+m0(s.tot/s.n)+' cada)' }).join(' e ')+'.' : '')+'</li>' }).join('')+
       '</ol>'+(lim>0 && mediaComum>lim? '<p class="note" style="margin:8px 0 0">'+(usaAtual?
-        (restam>0? 'Faltam '+restam+(restam===1?' dia':' dias')+'. '+(atual.comum>=lim? 'O limite de '+m0(lim)+' já foi passado em <b class="bad">'+m0(atual.comum-lim)+'</b>: o que dá para fazer agora é não somar mais, só o essencial até '+fD(atual.fim)+'.' : 'Sobram <b>'+m0(lim-atual.comum)+'</b> do limite, mas pela sua frequência devem entrar '+m0(R.tot)+'. Corte ou adie '+m0(mediaComum-lim)+' disso.') : 'O ciclo fecha hoje.')+' Para o próximo ciclo, veja abaixo onde você foi mais vezes que o normal.'
+        (restam>0? 'Faltam '+restam+(restam===1?' dia':' dias')+'. '+(atual.comum>=lim? 'O limite de '+m0(lim)+' já foi passado em <b class="bad">'+m0(atual.comum-lim)+'</b>: o que dá para fazer agora é não somar mais, só o essencial até '+fD(atual.fim)+'.' : 'Sobram <b>'+m0(lim-atual.comum)+'</b> do limite, mas pela sua frequência devem entrar '+m0(R.tot)+'. Corte ou adie '+m0(mediaComum-lim)+' disso.') : 'O ciclo fecha hoje.')+' Para o próximo ciclo, veja abaixo onde você foi mais vezes que de costume.'
         : 'Para voltar ao limite, o gasto comum precisa cair <b class="bad">'+m0(mediaComum-lim)+' por ciclo</b> (cerca de '+m0((mediaComum-lim)/ (atual.dias/7))+' por semana).')+'</p>':'')+'</section>';
   } else {
     html+='<section class="card ok-msg"><div class="ch"><h2>Onde atacar primeiro</h2></div><p style="margin:0">'+(alvos.some(function(a){return a.orc>0})? 'Nenhuma categoria com orçamento está acima na média, '+RP+'.' : 'Nenhuma categoria tem orçamento definido no app, então não há com o que comparar.')+
@@ -532,7 +532,7 @@ function render(){
   var fds=comuns.filter(function(l){ var w=dt(l.data).getDay(); return w===0||w===6 }).reduce(function(s,l){ return s+val(l) },0);
   html+='<section class="card"><div class="ch"><h2>Índices de comportamento</h2><span class="note">gasto comum, '+RP+'</span></div><div class="tw"><table><thead><tr><th>Índice</th><th>Valor</th><th>O que quer dizer</th></tr></thead><tbody>'+
     linhaI('Gastos pequenos (abaixo de CA$ '+PEQUENO+')', peq.length+' compras · '+m0(peqT)+' ('+pct(peqT/totC)+')', 'O "vazamento": cada um parece nada, somados '+(usaAtual?'já são '+m0(peqT)+' neste ciclo.':'viram '+m0(peqT/nEq)+' por ciclo.'))+
-    linhaI('Idas ao supermercado', (usaAtual? merc.length+' neste ciclo até hoje'+(R&&R.nHist? ' (normal: '+vezes(R.lugares.filter(function(s){return s.cat==='mercado'}).reduce(function(t,s){return t+s.freq},0)).replace('×','')+' por ciclo)':'') : (merc.length/nEq).toFixed(1).replace('.',',')+' por ciclo')+' · ticket '+money(merc.length? mercT/merc.length:0), 'Menos idas, com lista, costuma baixar o total: cada ida tem compra por impulso.')+
+    linhaI('Idas ao supermercado', (usaAtual? merc.length+' neste ciclo até hoje'+(R&&R.nHist? ' (costuma ser '+vezes(R.lugares.filter(function(s){return s.cat==='mercado'}).reduce(function(t,s){return t+s.freq},0)).replace('×','')+' por ciclo)':'') : (merc.length/nEq).toFixed(1).replace('.',',')+' por ciclo')+' · ticket '+money(merc.length? mercT/merc.length:0), 'Menos idas, com lista, costuma baixar o total: cada ida tem compra por impulso.')+
     linhaI('Dias com gasto', nDias+' de '+diasTot+' dias ('+pct(nDias/diasTot)+')', 'Dias "sem gasto" são o jeito mais simples de cortar sem sentir.')+
     linhaI('Gasto médio por dia', money(totC/Math.max(1,diasTot)), lim>0? 'O limite permite '+money(lim/atual.dias)+' por dia.' : '')+
     linhaI('Fim de semana', m0(fds)+' ('+pct(fds/totC)+')', 'Sáb e dom são 29% dos dias; acima disso, o fim de semana pesa.')+
@@ -551,7 +551,7 @@ function render(){
     maiores.map(function(l){ return '<tr><td>'+fD(l.data)+'</td><td class="t"><span class="sw" style="background:'+COR[l.cat]+'"></span>'+esc(l.desc||subDe(l))+'</td><td>'+money(val(l))+'</td></tr>' }).join('')+
     '</tbody></table></div></section>';
 
-  html+='</div><p class="foot">Gasto comum = Supermercado + Carro + Diversos + Viagens, o que o Limite do app controla. Parcelados não entram neste relatório. Ciclos = o Período das Configurações do app ('+fD(d.periodo.inicio)+' → '+fD(d.periodo.fim)+'), repetido mês a mês. Projeção do ciclo atual = o que já gastou + o que ainda deve entrar pela sua frequência: para cada lugar, quantas vezes você vai por ciclo e quanto gasta por ida (últimos ciclos fechados, até 6); nos dias que faltam conta só as idas que ainda cabem no seu normal (se já foi as vezes de sempre, não conta mais). Compra sem histórico não é repetida. Médias, índices e "onde atacar" usam os ciclos fechados do período escolhido ('+RP+'), com ciclos cortados contando proporcionalmente; ciclo cortado com menos da metade dos dias fica fora; sem nenhum ciclo fechado, a base é o ciclo atual com essa projeção. O Ritmo mostra sempre o ciclo de hoje.</p>';
+  html+='</div><p class="foot">Gasto comum = Supermercado + Carro + Diversos + Viagens, o que o Limite do app controla. Parcelados não entram neste relatório. Ciclos = o Período das Configurações do app ('+fD(d.periodo.inicio)+' → '+fD(d.periodo.fim)+'), repetido mês a mês. Projeção do ciclo atual = o que já gastou + o que ainda deve entrar pela sua frequência: para cada lugar, quantas vezes você vai por ciclo e quanto gasta por ida (últimos ciclos fechados, até 6); nos dias que faltam conta só as idas que ainda cabem no seu costume (se já foi as vezes de sempre, não conta mais). Compra sem histórico não é repetida. Médias, índices e "onde atacar" usam os ciclos fechados do período escolhido ('+RP+'), com ciclos cortados contando proporcionalmente; ciclo cortado com menos da metade dos dias fica fora; sem nenhum ciclo fechado, a base é o ciclo atual com essa projeção. O Ritmo mostra sempre o ciclo de hoje.</p>';
   el.innerHTML=html;
   ligarTips();
 }
@@ -581,8 +581,8 @@ function blocoFrequencia(at, lim){
     var mais=R.lugares.filter(function(s){ return s.n>=2 && s.n>=s.freq+1 }).map(function(s){ s.extraV=s.v - s.freq*(s.nH? s.vH/s.nH : 0); return s })
       .filter(function(s){ return s.extraV>=10 }).sort(function(a,b){ return b.extraV-a.extraV }).slice(0,6);
     var novos=R.lugares.filter(function(s){ return !s.nH && s.v>=50 }).sort(function(a,b){ return b.v-a.v }).slice(0,4);
-    if(mais.length) h+='<p class="note" style="margin:0 0 4px"><b>Neste ciclo você foi mais vezes que o normal</b></p><ul style="margin:0 0 10px;padding-left:20px">'+
-      mais.map(function(s){ return '<li>'+nomeL(s)+': '+s.n+' vezes, '+m0(s.v)+' (o normal é '+vezes(s.freq)+' por ciclo, cerca de '+m0(s.vH/R.nHist)+') → <span class="bad">'+m0(s.extraV)+' a mais</span></li>' }).join('')+'</ul>';
+    if(mais.length) h+='<p class="note" style="margin:0 0 4px"><b>Neste ciclo você foi mais vezes que de costume</b></p><ul style="margin:0 0 10px;padding-left:20px">'+
+      mais.map(function(s){ return '<li>'+nomeL(s)+': '+s.n+' vezes, '+m0(s.v)+' (você costuma ir '+vezes(s.freq)+' por ciclo, cerca de '+m0(s.vH/R.nHist)+') → <span class="bad">'+m0(s.extraV)+' a mais</span></li>' }).join('')+'</ul>';
     if(novos.length) h+='<p class="note" style="margin:0 0 4px"><b>Gastos que não aparecem nos ciclos anteriores</b> (não foram projetados de novo)</p><ul style="margin:0 0 10px;padding-left:20px">'+
       novos.map(function(s){ return '<li>'+nomeL(s)+': '+m0(s.v)+(s.n>1?' em '+s.n+' vezes':'')+'</li>' }).join('')+'</ul>';
   }
